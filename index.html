@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TradeLog Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#07070f;--s1:#0d0d1a;--s2:#12121f;--s3:#181828;--s4:#1f1f32;
+  --border:#252538;--border2:#2e2e48;
+  --text:#d0d0e8;--muted:#6060a0;
+  --green:#00e87a;--red:#ff4d6a;--blue:#4d9dff;--yellow:#ffd060;--purple:#a060ff;
+  --grbg:rgba(0,232,122,0.08);--rdbg:rgba(255,77,106,0.08);--blbg:rgba(77,157,255,0.1);
+  --ui:'Syne',sans-serif;--mono:'DM Mono',monospace;
+  --r:6px;--r2:10px;--r3:14px;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--ui);font-size:14px;min-height:100vh;display:flex;overflow:hidden}
+
+/* LOCK */
+#lock{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px}
+#lock h1{font-size:28px;font-weight:700;letter-spacing:-0.5px}
+.lock-logo{width:54px;height:54px;background:var(--s3);border:1px solid var(--border2);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:4px}
+#pinIn{background:var(--s3);border:1px solid var(--border2);border-radius:var(--r);padding:12px 16px;color:var(--text);font-family:var(--mono);font-size:20px;letter-spacing:10px;text-align:center;width:160px;outline:none}
+#pinIn:focus{border-color:var(--blue)}
+.btn-unlock{background:var(--blue);color:#fff;border:none;padding:10px 32px;border-radius:var(--r);cursor:pointer;font-family:var(--ui);font-size:14px;font-weight:600}
+#pinErr{color:var(--red);font-size:12px;font-family:var(--mono);height:16px}
+#lock .sub{color:var(--muted);font-size:12px;font-family:var(--mono)}
+
+/* SETUP */
+#setup{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:8000;display:none;align-items:center;justify-content:center;padding:20px}
+#setup.open{display:flex}
+.setup-box{background:var(--s2);border:1px solid var(--border2);border-radius:var(--r3);width:100%;max-width:580px;overflow:hidden}
+.setup-head{padding:22px 24px;border-bottom:1px solid var(--border);text-align:center}
+.setup-head h2{font-size:19px;font-weight:700;margin-bottom:4px}
+.setup-head p{color:var(--muted);font-size:12px;font-family:var(--mono)}
+.setup-body{padding:24px;display:flex;flex-direction:column;gap:14px}
+.setup-footer{padding:14px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+.step-row{display:flex;gap:10px;align-items:flex-start;padding:12px;background:var(--s3);border-radius:var(--r);border:1px solid var(--border)}
+.step-n{width:22px;height:22px;min-width:22px;border-radius:50%;background:var(--blbg);border:1px solid rgba(77,157,255,.3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--blue);font-family:var(--mono);margin-top:1px}
+.step-t{font-size:13px;color:var(--muted);line-height:1.65}
+.step-t strong{color:var(--text)}
+.step-t code{font-family:var(--mono);color:var(--blue);background:rgba(77,157,255,0.08);padding:1px 5px;border-radius:3px}
+
+/* SIDEBAR */
+#sidebar{width:52px;background:var(--s1);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:4px;flex-shrink:0;height:100vh;position:sticky;top:0}
+.logo{width:36px;height:36px;background:var(--s4);border:1px solid var(--border2);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+.nav-btn{width:38px;height:38px;border-radius:var(--r);border:none;background:transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;position:relative}
+.nav-btn:hover{background:var(--s3);color:var(--text)}
+.nav-btn.active{background:var(--blbg);color:var(--blue)}
+.nav-btn svg{width:18px;height:18px;flex-shrink:0}
+.nav-sep{width:24px;height:1px;background:var(--border);margin:6px 0}
+.tip{position:absolute;left:52px;background:#1a1a30;border:1px solid var(--border2);padding:4px 9px;border-radius:4px;font-size:11px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .1s;z-index:100}
+.nav-btn:hover .tip{opacity:1}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--muted);position:absolute;bottom:6px;right:6px}
+.sync-dot.ok{background:var(--green);box-shadow:0 0 5px var(--green)}
+.sync-dot.err{background:var(--red)}
+.sync-dot.busy{background:var(--yellow);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* MAIN */
+#main{flex:1;overflow:hidden;height:100vh;display:flex;flex-direction:column}
+.view{display:none;flex:1;overflow-y:auto;padding:24px;flex-direction:column;gap:18px}
+.view.active{display:flex}
+
+/* TOPBAR */
+.topbar{display:flex;align-items:center;justify-content:space-between}
+.topbar h2{font-size:18px;font-weight:600;letter-spacing:-.3px}
+.tr{display:flex;gap:8px;align-items:center}
+.sync-info{font-size:11px;font-family:var(--mono);color:var(--muted)}
+
+/* CARDS */
+.c6{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.c4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.card{background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px}
+.clb{font-size:11px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.cv{font-size:22px;font-weight:600;font-family:var(--mono);letter-spacing:-.5px}
+.cs{font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:3px}
+.p{color:var(--green)}.n{color:var(--red)}
+
+/* PANELS */
+.p2{display:grid;grid-template-columns:2fr 1fr;gap:12px}
+.p2e{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.panel{background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:16px}
+.ptitle{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px}
+.cw{position:relative;width:100%}
+.h260{height:260px}.h200{height:200px}.h220{height:220px}.h120{height:120px}.h100{height:100px}
+
+/* TABLE */
+.tw{background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden}
+.th{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)}
+.th h3{font-size:13px;font-weight:600}
+table{width:100%;border-collapse:collapse}
+thead th{padding:9px 14px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);text-align:left;background:var(--s1);border-bottom:1px solid var(--border);cursor:pointer;user-select:none;white-space:nowrap}
+thead th:hover{color:var(--text)}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s;cursor:pointer}
+tbody tr:hover{background:var(--s3)}
+tbody tr:last-child{border-bottom:none}
+td{padding:9px 14px;font-family:var(--mono);font-size:12px;white-space:nowrap}
+td.sym{color:var(--blue);font-weight:500}
+td.pc{color:var(--green)}td.nc{color:var(--red)}
+td.sl{color:var(--green)}td.ss{color:var(--red)}
+.gb{display:inline-block;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600}
+.gA{background:rgba(0,232,122,.15);color:var(--green)}
+.gB{background:rgba(77,157,255,.15);color:var(--blue)}
+.gC{background:rgba(255,208,96,.15);color:var(--yellow)}
+.gD{background:rgba(255,77,106,.15);color:var(--red)}
+.src-a{color:var(--green);font-size:10px}.src-m{color:var(--muted);font-size:10px}
+
+/* FILTERS */
+.filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.filters input,.filters select{background:var(--s3);border:1px solid var(--border);border-radius:var(--r);padding:7px 10px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none}
+.filters input:focus,.filters select:focus{border-color:var(--blue)}
+.filters select option{background:var(--s3)}
+.fsep{width:1px;height:20px;background:var(--border);margin:0 2px}
+
+/* BUTTONS */
+.btn{border:none;border-radius:var(--r);padding:8px 14px;cursor:pointer;font-family:var(--ui);font-size:13px;font-weight:500;display:inline-flex;align-items:center;gap:6px;transition:all .15s}
+.btn-p{background:var(--blue);color:#fff}.btn-p:hover{background:#3a8de0}
+.btn-g{background:var(--s3);color:var(--text);border:1px solid var(--border)}.btn-g:hover{background:var(--s4);border-color:var(--border2)}
+.btn-d{background:var(--rdbg);color:var(--red);border:1px solid rgba(255,77,106,.2)}.btn-d:hover{background:rgba(255,77,106,.15)}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-ic{width:30px;height:30px;padding:0;justify-content:center;border:1px solid var(--border);background:var(--s3)}.btn-ic:hover{background:var(--s4)}
+.btn-green{background:var(--grbg);color:var(--green);border:1px solid rgba(0,232,122,.2)}
+
+/* MODALS */
+.mbg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
+.mbg.open{display:flex}
+.modal{background:var(--s2);border:1px solid var(--border2);border-radius:var(--r3);width:100%;max-width:620px;max-height:90vh;overflow-y:auto}
+.mh{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
+.mh h3{font-size:15px;font-weight:600}
+.mb{padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.mb .full{grid-column:span 2}
+.mf{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+label{font-size:12px;color:var(--muted);display:block;margin-bottom:5px;font-family:var(--mono)}
+input,select,textarea{width:100%;background:var(--s3);border:1px solid var(--border);border-radius:var(--r);padding:9px 12px;color:var(--text);font-family:var(--mono);font-size:13px;outline:none;transition:border .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--blue)}
+select option{background:var(--s2)}
+textarea{resize:vertical;min-height:70px}
+.fg{display:flex;flex-direction:column}
+.pnl-preview{padding:10px 12px;background:var(--s4);border-radius:var(--r);font-family:var(--mono);font-size:13px;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--border)}
+
+/* CALENDAR */
+.calhd{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:4px}
+.calhd span{text-align:center;font-size:10px;color:var(--muted);font-family:var(--mono);padding:4px}
+.calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.calcell{aspect-ratio:1;border-radius:5px;background:var(--s3);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .1s;min-height:44px}
+.calcell:hover{border-color:var(--border2)}
+.calcell.pos{background:rgba(0,232,122,.1);border-color:rgba(0,232,122,.3)}
+.calcell.neg{background:rgba(255,77,106,.08);border-color:rgba(255,77,106,.3)}
+.calcell.today{border-color:var(--blue)!important;border-width:1.5px}
+.calcell .dn{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.calcell .dp{font-size:10px;font-family:var(--mono);font-weight:500;margin-top:1px}
+.calempty{min-height:44px}
+.calnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+
+/* INFO BOXES */
+.ibox{background:var(--blbg);border:1px solid rgba(77,157,255,.2);border-radius:var(--r2);padding:12px 16px;font-size:13px;color:#8ab8e8;line-height:1.7}
+.wbox{background:rgba(255,208,96,.07);border:1px solid rgba(255,208,96,.2);border-radius:var(--r2);padding:12px 16px;font-size:13px;color:#c8a840;line-height:1.7}
+.sbox{background:var(--grbg);border:1px solid rgba(0,232,122,.2);border-radius:var(--r2);padding:12px 16px;font-size:13px;color:#60c888;line-height:1.7}
+
+/* CODE */
+.code{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:14px;font-family:var(--mono);font-size:11px;color:#a0a0d0;line-height:1.7;overflow-x:auto;position:relative;white-space:pre;max-height:320px;overflow-y:auto}
+.cpbtn{position:absolute;top:8px;right:8px;background:var(--s3);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:11px;color:var(--muted);cursor:pointer}
+.cpbtn:hover{color:var(--text)}
+
+/* MISC */
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--s4);border:1px solid var(--border2);border-radius:var(--r2);padding:9px 18px;font-size:13px;z-index:9000;opacity:0;transition:opacity .2s;pointer-events:none;font-family:var(--mono);white-space:nowrap}
+.div{height:1px;background:var(--border)}
+.ra{display:flex;gap:4px;opacity:0;transition:opacity .1s}
+tr:hover .ra{opacity:1}
+.stbl{width:100%;border-collapse:collapse}
+.stbl td{padding:7px 10px;font-family:var(--mono);font-size:12px;border-bottom:1px solid var(--border)}
+.stbl tr:last-child td{border-bottom:none}
+.stbl td:last-child{text-align:right;font-weight:500}
+.arch-row{display:flex;align-items:center;gap:8px;padding:10px;background:var(--s3);border-radius:var(--r);border:1px solid var(--border);font-family:var(--mono);font-size:12px}
+.arch-arrow{color:var(--muted);font-size:16px}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-family:var(--mono)}
+.badge-blue{background:var(--blbg);color:var(--blue)}
+.badge-green{background:var(--grbg);color:var(--green)}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+
+<!-- LOCK -->
+<div id="lock">
+  <div class="lock-logo">📈</div>
+  <h1>TradeLog Pro</h1>
+  <p class="sub" id="lock-sub">Personal Trading Journal</p>
+  <input type="password" id="pinIn" placeholder="PIN" maxlength="8" onkeydown="if(event.key==='Enter')unlock()">
+  <button class="btn-unlock" onclick="unlock()">Unlock</button>
+  <span id="pinErr"></span>
+</div>
+
+<!-- FIRST RUN SETUP -->
+<div id="setup">
+  <div class="setup-box">
+    <div class="setup-head">
+      <h2>Connect Your GitHub Repo</h2>
+      <p>One-time setup · 3 minutes · everything lives in git</p>
+    </div>
+    <div class="setup-body">
+      <div class="ibox">Your trades are stored in <code style="font-family:var(--mono);color:var(--blue)">data/trades.json</code> inside your GitHub repo. The journal reads and writes it directly via the GitHub API — no database needed.</div>
+
+      <div class="step-row">
+        <div class="step-n">1</div>
+        <div class="step-t">Create a <strong>private GitHub repo</strong> (e.g. <code>tradelog</code>). Push the files from the ZIP — or just create the repo and let the bridge script do the first commit.</div>
+      </div>
+      <div class="step-row">
+        <div class="step-n">2</div>
+        <div class="step-t">Generate a <strong>Personal Access Token</strong>: GitHub → Settings → Developer Settings → Personal Access Tokens → Fine-grained → New Token. Give it <strong>Read and Write access to Contents</strong> on your repo. Copy the token.</div>
+      </div>
+      <div class="step-row">
+        <div class="step-n">3</div>
+        <div class="step-t">Enable <strong>GitHub Pages</strong> on your repo: Settings → Pages → Source = <code>main</code> branch → <code>/ (root)</code>. Your journal URL will be <code>https://yourusername.github.io/tradelog/</code>.</div>
+      </div>
+      <div class="step-row">
+        <div class="step-n">4</div>
+        <div class="step-t">Fill in the fields below, then click <strong>Save & Connect</strong>.</div>
+      </div>
+
+      <div class="fg"><label>GitHub Username</label><input type="text" id="s-owner" placeholder="your-github-username"></div>
+      <div class="fg"><label>Repository Name</label><input type="text" id="s-repo" placeholder="tradelog"></div>
+      <div class="fg"><label>Personal Access Token</label><input type="password" id="s-pat" placeholder="github_pat_…"></div>
+      <div id="setup-test-result"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-g btn-sm" onclick="testGitHub()">Test Connection</button>
+      </div>
+
+      <div class="wbox">For private GitHub repos, GitHub Pages is only available on paid plans. If you want free hosting, use <strong>Cloudflare Pages</strong> instead — it's free and connects to private repos. See the Git tab in the journal for instructions.</div>
+    </div>
+    <div class="setup-footer">
+      <button class="btn btn-g btn-sm" onclick="skipSetup()">Skip — use offline</button>
+      <button class="btn btn-p btn-sm" onclick="saveSetup()">Save & Connect</button>
+    </div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" width="18" height="18"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+  <button class="nav-btn active" data-view="dashboard" onclick="gv('dashboard',this)">
+    <span class="tip">Dashboard</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+  </button>
+  <button class="nav-btn" data-view="trades" onclick="gv('trades',this)">
+    <span class="tip">Trade Log</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3" cy="6" r="1.5"/><circle cx="3" cy="12" r="1.5"/><circle cx="3" cy="18" r="1.5"/></svg>
+  </button>
+  <button class="nav-btn" data-view="analytics" onclick="gv('analytics',this)">
+    <span class="tip">Analytics</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+  </button>
+  <button class="nav-btn" data-view="calendar" onclick="gv('calendar',this)">
+    <span class="tip">Calendar</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+  </button>
+  <div class="nav-sep"></div>
+  <button class="nav-btn" data-view="gitguide" onclick="gv('gitguide',this)" style="position:relative">
+    <span class="tip">Git Setup</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><line x1="1.05" y1="12" x2="7" y2="12"/><line x1="17.01" y1="12" x2="22.96" y2="12"/></svg>
+    <span class="sync-dot" id="syn-dot"></span>
+  </button>
+  <button class="nav-btn" onclick="openSettings()" style="margin-top:auto">
+    <span class="tip">Settings</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+  </button>
+</nav>
+
+<!-- MAIN -->
+<div id="main">
+
+  <!-- DASHBOARD -->
+  <section class="view active" id="view-dashboard">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:10px">
+        <h2>Dashboard</h2>
+        <span class="sync-info" id="last-sync"></span>
+      </div>
+      <div class="tr">
+        <button class="btn btn-g btn-sm" onclick="manualSync()">↻ Sync</button>
+        <button class="btn btn-g btn-sm" onclick="exportJSON()">↓ Export</button>
+        <button class="btn btn-p btn-sm" onclick="openModal()">+ Add Trade</button>
+      </div>
+    </div>
+    <div class="c6">
+      <div class="card"><div class="clb">Net P&amp;L</div><div class="cv" id="m-pnl">—</div><div class="cs" id="m-pnl-sub">—</div></div>
+      <div class="card"><div class="clb">Win Rate</div><div class="cv" id="m-wr">—</div><div class="cs" id="m-wr-sub">—</div></div>
+      <div class="card"><div class="clb">Profit Factor</div><div class="cv" id="m-pf">—</div><div class="cs">gross ratio</div></div>
+      <div class="card"><div class="clb">Avg Win</div><div class="cv p" id="m-aw">—</div></div>
+      <div class="card"><div class="clb">Avg Loss</div><div class="cv n" id="m-al">—</div></div>
+      <div class="card"><div class="clb">Max Drawdown</div><div class="cv n" id="m-dd">—</div></div>
+    </div>
+    <div class="c4">
+      <div class="card"><div class="clb">Today</div><div class="cv" id="m-today">—</div></div>
+      <div class="card"><div class="clb">This Week</div><div class="cv" id="m-week">—</div></div>
+      <div class="card"><div class="clb">Best Trade</div><div class="cv p" id="m-best">—</div></div>
+      <div class="card"><div class="clb">Worst Trade</div><div class="cv n" id="m-worst">—</div></div>
+    </div>
+    <div class="p2">
+      <div class="panel"><div class="ptitle">Equity Curve</div><div class="cw h260"><canvas id="eqChart"></canvas></div></div>
+      <div class="panel" style="display:flex;flex-direction:column;gap:12px">
+        <div><div class="ptitle">Win / Loss</div><div class="cw h120"><canvas id="wlChart"></canvas></div></div>
+        <div class="div"></div>
+        <div><div class="ptitle">Long vs Short</div><div class="cw h100"><canvas id="sideChart"></canvas></div></div>
+      </div>
+    </div>
+    <div class="panel"><div class="ptitle">Daily P&amp;L — Last 30 Days</div><div class="cw h200"><canvas id="dayChart"></canvas></div></div>
+    <div class="tw">
+      <div class="th"><h3>Recent Trades</h3><button class="btn btn-g btn-sm" onclick="gv('trades',document.querySelector('[data-view=trades]'))">All trades →</button></div>
+      <table><thead><tr><th>Date</th><th>Time</th><th>Symbol</th><th>Side</th><th>Qty</th><th>Entry</th><th>Exit</th><th>Net P&amp;L</th><th>Grade</th><th>Source</th></tr></thead>
+      <tbody id="rtbody"></tbody></table>
+    </div>
+  </section>
+
+  <!-- TRADES -->
+  <section class="view" id="view-trades">
+    <div class="topbar"><h2>Trade Log</h2>
+      <div class="tr">
+        <label class="btn btn-g btn-sm" for="csvIn" style="cursor:pointer">↑ Import CSV</label>
+        <input type="file" id="csvIn" accept=".csv" style="display:none" onchange="importCSV(this)">
+        <button class="btn btn-p btn-sm" onclick="openModal()">+ Add Trade</button>
+      </div>
+    </div>
+    <div class="filters">
+      <input type="date" id="ff" onchange="renderTrades()"><input type="date" id="ft" onchange="renderTrades()">
+      <div class="fsep"></div>
+      <input type="text" id="fsym" placeholder="Symbol" style="width:90px" oninput="renderTrades()">
+      <select id="fsd" onchange="renderTrades()"><option value="">All Sides</option><option>Long</option><option>Short</option></select>
+      <select id="fgr" onchange="renderTrades()"><option value="">All Grades</option><option>A</option><option>B</option><option>C</option><option>D</option></select>
+      <select id="fsr" onchange="renderTrades()"><option value="">All Sources</option><option value="auto">Auto-synced</option><option value="manual">Manual</option></select>
+      <div class="fsep"></div>
+      <button class="btn btn-g btn-sm" onclick="qf('today')">Today</button>
+      <button class="btn btn-g btn-sm" onclick="qf('week')">Week</button>
+      <button class="btn btn-g btn-sm" onclick="qf('month')">Month</button>
+      <button class="btn btn-g btn-sm" onclick="clearF()">Clear</button>
+    </div>
+    <div class="tw">
+      <div class="th"><h3 id="tcnt">—</h3><span style="font-family:var(--mono);font-size:12px;color:var(--muted)" id="tsum"></span></div>
+      <table><thead><tr>
+        <th onclick="srt('date')">Date</th><th onclick="srt('time')">Time</th>
+        <th onclick="srt('symbol')">Symbol</th><th>Side</th>
+        <th onclick="srt('qty')">Qty</th><th>Entry</th><th>Exit</th>
+        <th onclick="srt('netPnl')">Net P&amp;L</th>
+        <th onclick="srt('rMultiple')">R</th><th onclick="srt('duration')">Dur.</th>
+        <th>Grade</th><th>Setup</th><th>Source</th><th></th>
+      </tr></thead><tbody id="ttbody"></tbody></table>
+    </div>
+  </section>
+
+  <!-- ANALYTICS -->
+  <section class="view" id="view-analytics">
+    <div class="topbar"><h2>Analytics</h2></div>
+    <div class="p2e">
+      <div class="panel"><div class="ptitle">P&amp;L by Symbol</div><div class="cw h220"><canvas id="symChart"></canvas></div></div>
+      <div class="panel"><div class="ptitle">P&amp;L by Day of Week</div><div class="cw h220"><canvas id="dowChart"></canvas></div></div>
+      <div class="panel"><div class="ptitle">P&amp;L by Hour</div><div class="cw h220"><canvas id="hrChart"></canvas></div></div>
+      <div class="panel"><div class="ptitle">Duration Histogram</div><div class="cw h220"><canvas id="durChart"></canvas></div></div>
+    </div>
+    <div class="p2e">
+      <div class="panel"><div class="ptitle">Performance by Setup</div>
+        <table class="stbl"><thead><tr><th style="color:var(--muted);font-size:11px;padding:7px 10px">Setup</th><th style="color:var(--muted);font-size:11px;padding:7px 10px;text-align:right">Trades</th><th style="color:var(--muted);font-size:11px;padding:7px 10px;text-align:right">Win%</th><th style="color:var(--muted);font-size:11px;padding:7px 10px;text-align:right">P&L</th></tr></thead><tbody id="setupbody"></tbody></table>
+      </div>
+      <div class="panel"><div class="ptitle">Streaks &amp; Consistency</div><table class="stbl"><tbody id="streakbody"></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- CALENDAR -->
+  <section class="view" id="view-calendar">
+    <div class="topbar"><h2>Calendar</h2></div>
+    <div style="display:grid;grid-template-columns:1fr 300px;gap:16px">
+      <div class="panel">
+        <div class="calnav"><button class="btn btn-g btn-sm" onclick="calPrev()">←</button><h3 id="cal-title"></h3><button class="btn btn-g btn-sm" onclick="calNext()">→</button></div>
+        <div class="calhd"><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span><span>SUN</span></div>
+        <div class="calgrid" id="calgrid"></div>
+        <div style="display:flex;gap:16px;margin-top:10px;font-size:11px;font-family:var(--mono);color:var(--muted)">
+          <span style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:2px;background:var(--green);display:inline-block"></span>Profitable</span>
+          <span style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:2px;background:var(--red);display:inline-block"></span>Loss</span>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="ptitle" id="caldt-title">Select a day</div>
+        <div id="caldt-body"><p style="font-size:12px;color:var(--muted);font-family:var(--mono)">Click any day with trades.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GIT GUIDE -->
+  <section class="view" id="view-gitguide">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:10px"><h2>Git Setup & Auto-Sync</h2><span class="badge badge-green" id="git-badge">configured</span></div>
+      <div class="tr"><button class="btn btn-p btn-sm" onclick="dlAll()">↓ Download All Scripts</button></div>
+    </div>
+
+    <div class="ibox">
+      All your trades live in <strong>data/trades.json</strong> inside your GitHub repo. The bridge script on your trading PC pushes fills via the GitHub API at <strong>4:30 PM ET weekdays</strong> — no git install needed on the trading PC. Your journal fetches the same file from GitHub Pages on every sync.
+    </div>
+
+    <!-- Architecture -->
+    <div class="panel">
+      <div class="ptitle">Full Architecture</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div class="arch-row"><span style="color:var(--blue)">Sierra Chart</span><span style="color:var(--muted);font-size:11px">writes fills to AccountTrade.csv</span></div>
+        <div style="text-align:center;color:var(--muted);font-size:12px;padding:2px 0">↓ weekdays 4:30 PM (Task Scheduler)</div>
+        <div class="arch-row"><span style="color:var(--yellow)">sc_auto_bridge.py</span><span style="color:var(--muted);font-size:11px">parses fills · pairs round-trips · calculates P&amp;L</span></div>
+        <div style="text-align:center;color:var(--muted);font-size:12px;padding:2px 0">↓ GitHub Contents API (HTTPS PUT) — no git CLI needed</div>
+        <div class="arch-row"><span style="color:var(--purple)">github.com/you/tradelog</span><span style="color:var(--muted);font-size:11px">private repo · data/trades.json committed with version history</span></div>
+        <div style="text-align:center;color:var(--muted);font-size:12px;padding:2px 0">↓ GitHub Pages or Cloudflare Pages — auto-deploys on every push</div>
+        <div class="arch-row"><span style="color:var(--green)">TradeLog Pro</span><span style="color:var(--muted);font-size:11px">fetches trades.json on load · any device · any browser</span></div>
+      </div>
+    </div>
+
+    <!-- Hosting options -->
+    <div class="p2e">
+      <div class="panel">
+        <div class="ptitle">Option A — GitHub Pages (simplest)</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
+          <div class="step-row"><div class="step-n">1</div><div class="step-t">Push the repo. Go to <strong>Settings → Pages → Source: main branch, / root</strong>.</div></div>
+          <div class="step-row"><div class="step-n">2</div><div class="step-t">Your journal lives at <code>https://&lt;you&gt;.github.io/tradelog/</code></div></div>
+          <div class="step-row"><div class="step-n">⚠</div><div class="step-t" style="color:#c8a840">GitHub Pages is <strong>public</strong> for free accounts. Secure it with the journal PIN. For private Pages, you need GitHub Pro ($4/mo) — or use Option B.</div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="ptitle">Option B — Cloudflare Pages (free + private)</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
+          <div class="step-row"><div class="step-n">1</div><div class="step-t">Go to <strong>Cloudflare Dashboard → Pages → Connect to Git</strong>. Pick your private repo.</div></div>
+          <div class="step-row"><div class="step-n">2</div><div class="step-t">Build settings: Framework = None, Build output = <code>/</code>. Deploy.</div></div>
+          <div class="step-row"><div class="step-n">3</div><div class="step-t">Enable <strong>Cloudflare Access</strong> (free): Zero Trust → Access → Applications → add your Pages URL. Restricts access to email you allow. Auto-deploys on every git push — no manual step.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts preview -->
+    <div class="panel">
+      <div class="ptitle">sc_auto_bridge.py</div>
+      <div class="code"><button class="cpbtn" onclick="cpCode(this)">copy</button><span id="bridge-code"></span></div>
+    </div>
+    <div class="panel">
+      <div class="ptitle">setup_windows.bat</div>
+      <div class="code"><button class="cpbtn" onclick="cpCode(this)">copy</button><span id="bat-code"></span></div>
+    </div>
+    <div class="panel">
+      <div class="ptitle">.github/workflows/pages.yml — Auto-deploy workflow</div>
+      <div class="code"><button class="cpbtn" onclick="cpCode(this)">copy</button><span id="gha-code"></span></div>
+    </div>
+  </section>
+</div>
+
+<!-- ADD/EDIT TRADE MODAL -->
+<div class="mbg" id="modal">
+  <div class="modal">
+    <div class="mh"><h3 id="modal-title">Add Trade</h3><button class="btn-ic btn" onclick="closeModal()">✕</button></div>
+    <div class="mb">
+      <div class="fg"><label>Date *</label><input type="date" id="td"></div>
+      <div class="fg"><label>Time</label><input type="time" id="tt"></div>
+      <div class="fg"><label>Symbol *</label><input type="text" id="ts" placeholder="NQ, ES, MNQ…" oninput="this.value=this.value.toUpperCase()"></div>
+      <div class="fg"><label>Side *</label><select id="tsi"><option value="Long">Long</option><option value="Short">Short</option></select></div>
+      <div class="fg"><label>Quantity *</label><input type="number" id="tq" min="1" step="1" oninput="calcP()"></div>
+      <div class="fg"><label>Tick Value ($)</label><input type="number" id="tk" step="0.01" oninput="calcP()"></div>
+      <div class="fg"><label>Entry Price *</label><input type="number" id="te" step="0.01" oninput="calcP()"></div>
+      <div class="fg"><label>Exit Price *</label><input type="number" id="tx" step="0.01" oninput="calcP()"></div>
+      <div class="fg"><label>Commission ($)</label><input type="number" id="tc" step="0.01" oninput="calcP()"></div>
+      <div class="fg"><label>Duration (min)</label><input type="number" id="tdu" min="0" step="1"></div>
+      <div class="fg"><label>R-Multiple</label><input type="number" id="tr" step="0.01"></div>
+      <div class="fg"><label>Setup</label><input type="text" id="tst" list="sdl"><datalist id="sdl"></datalist></div>
+      <div class="fg"><label>Grade</label><select id="tg"><option value="">No Grade</option><option value="A">A — Perfect</option><option value="B">B — Good</option><option value="C">C — OK</option><option value="D">D — Poor</option></select></div>
+      <div class="fg full"><div class="pnl-preview"><span style="color:var(--muted);font-size:12px">Calculated P&amp;L</span><span id="pnlcalc" style="font-size:15px;font-weight:600">—</span></div></div>
+      <div class="fg full"><label>Notes</label><textarea id="tn" placeholder="Setup, mistakes, lessons…"></textarea></div>
+    </div>
+    <div class="mf"><button class="btn btn-g" onclick="closeModal()">Cancel</button><button class="btn btn-p" onclick="saveTrade()">Save Trade</button></div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="mbg" id="modal-settings">
+  <div class="modal" style="max-width:460px">
+    <div class="mh"><h3>Settings</h3><button class="btn-ic btn" onclick="closeSettings()">✕</button></div>
+    <div class="mb" style="grid-template-columns:1fr">
+      <div class="fg"><label>Change PIN</label><div style="display:flex;gap:8px"><input type="password" id="op" placeholder="Current PIN"><input type="password" id="np" placeholder="New PIN (min 4)"></div></div>
+      <div class="div"></div>
+      <div class="fg"><label>Account Starting Balance ($)</label><input type="number" id="sbal" placeholder="25000"></div>
+      <div class="fg"><label>Default Tick Value ($)</label><input type="number" id="stck" step="0.01"></div>
+      <div class="fg"><label>Default Commission ($)</label><input type="number" id="scom" step="0.01"></div>
+      <div class="div"></div>
+      <div class="fg"><label>GitHub Owner</label><input type="text" id="sown"></div>
+      <div class="fg"><label>GitHub Repo</label><input type="text" id="srep"></div>
+      <div class="fg"><label>GitHub PAT</label><input type="password" id="spat"></div>
+    </div>
+    <div class="mf" style="justify-content:space-between">
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-g btn-sm" onclick="exportJSON()">↓ Backup</button>
+        <label class="btn btn-g btn-sm" for="rfile" style="cursor:pointer">↑ Restore</label>
+        <input type="file" id="rfile" accept=".json" style="display:none" onchange="restoreJSON(this)">
+        <button class="btn btn-d btn-sm" onclick="clearAll()">Clear All</button>
+      </div>
+      <button class="btn btn-p" onclick="saveSettings()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+const PIN_K = 'tl_pin', CFG_K = 'tl_cfg', CACHE_K = 'tl_cache';
+const DEF_PIN = '1234';
+let cfg = { owner:'', repo:'', pat:'', balance:25000, tick:5, comm:4 };
+let trades = [], charts = {}, sortCol='date', sortDir=-1, calDate=new Date(), editId=null;
+let ghFileSha = null; // tracks current SHA for updates
+
+// ═══════════════════════════════════════════════
+// LOCK
+// ═══════════════════════════════════════════════
+window.addEventListener('load', () => {
+  if (!localStorage.getItem(PIN_K))
+    document.getElementById('lock-sub').textContent = 'Default PIN: 1234';
+});
+function unlock() {
+  const pin = g('pinIn').value, stored = localStorage.getItem(PIN_K) || DEF_PIN;
+  if (pin !== stored) { g('pinErr').textContent = 'Incorrect PIN'; g('pinIn').value=''; return; }
+  g('lock').style.display = 'none';
+  loadCfg();
+  if (!cfg.owner || !cfg.repo || !cfg.pat) { g('setup').classList.add('open'); }
+  else { initApp(); }
+}
+g('pinIn').addEventListener('keydown', e => { if(e.key==='Enter') unlock(); });
+
+// ═══════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════
+function loadCfg() {
+  try { const r=localStorage.getItem(CFG_K); if(r) cfg={...cfg,...JSON.parse(r)}; } catch(e){}
+  syncCfgUI();
+}
+function saveCfg() { localStorage.setItem(CFG_K, JSON.stringify(cfg)); }
+
+// ═══════════════════════════════════════════════
+// GITHUB API
+// ═══════════════════════════════════════════════
+const GH = 'https://api.github.com';
+function ghHeaders() {
+  return { Authorization:`token ${cfg.pat}`, Accept:'application/vnd.github.v3+json', 'Content-Type':'application/json' };
+}
+async function ghGet(path) {
+  const r = await fetch(`${GH}/repos/${cfg.owner}/${cfg.repo}/contents/${path}`, { headers: ghHeaders() });
+  if (r.status === 404) return null;
+  if (!r.ok) throw new Error(`GitHub GET ${path}: ${r.status}`);
+  return r.json();
+}
+async function ghPut(path, content, sha, message) {
+  const body = { message, content: btoa(unescape(encodeURIComponent(JSON.stringify(content, null, 2)))), committer:{name:'TradeLog Pro',email:'tradelog@local'} };
+  if (sha) body.sha = sha;
+  const r = await fetch(`${GH}/repos/${cfg.owner}/${cfg.repo}/contents/${path}`, { method:'PUT', headers:ghHeaders(), body:JSON.stringify(body) });
+  if (!r.ok) { const t=await r.text(); throw new Error(`GitHub PUT: ${r.status} — ${t}`); }
+  return r.json();
+}
+
+// ═══════════════════════════════════════════════
+// SETUP WIZARD
+// ═══════════════════════════════════════════════
+async function testGitHub() {
+  const owner=g('s-owner').value.trim(), repo=g('s-repo').value.trim(), pat=g('s-pat').value.trim();
+  if (!owner||!repo||!pat) { g('setup-test-result').innerHTML='<div class="wbox" style="margin-top:8px">Fill in all three fields.</div>'; return; }
+  g('setup-test-result').innerHTML='<div class="ibox" style="margin-top:8px">Testing…</div>';
+  try {
+    const r = await fetch(`${GH}/repos/${owner}/${repo}`, { headers:{Authorization:`token ${pat}`} });
+    if (r.ok) g('setup-test-result').innerHTML='<div class="sbox" style="margin-top:8px">✓ Connected to <strong>'+owner+'/'+repo+'</strong></div>';
+    else g('setup-test-result').innerHTML=`<div class="wbox" style="margin-top:8px">✗ HTTP ${r.status} — check your PAT permissions and repo name.</div>`;
+  } catch(e) { g('setup-test-result').innerHTML=`<div class="wbox" style="margin-top:8px">✗ ${e.message}</div>`; }
+}
+function saveSetup() {
+  const owner=g('s-owner').value.trim(), repo=g('s-repo').value.trim(), pat=g('s-pat').value.trim();
+  if (!owner||!repo||!pat) { toast('Fill all fields'); return; }
+  cfg.owner=owner; cfg.repo=repo; cfg.pat=pat; saveCfg();
+  g('setup').classList.remove('open');
+  initApp();
+}
+function skipSetup() { g('setup').classList.remove('open'); loadLocalCache(); renderAll(); initScripts(); }
+
+// ═══════════════════════════════════════════════
+// INIT & SYNC
+// ═══════════════════════════════════════════════
+async function initApp() {
+  loadLocalCache(); renderAll();
+  await fetchTrades();
+  renderAll(); populateSDL();
+  setInterval(fetchTrades, 5*60*1000);
+  initScripts();
+  updateGitBadge();
+}
+function loadLocalCache() {
+  try { const r=localStorage.getItem(CACHE_K); if(r) trades=JSON.parse(r); } catch(e){}
+}
+function setSyncDot(state) {
+  const d=g('syn-dot'); d.className='sync-dot '+(state==='ok'?'ok':state==='err'?'err':state==='busy'?'busy':'');
+}
+function setLastSync() { g('last-sync').textContent='Synced '+new Date().toLocaleTimeString(); }
+async function fetchTrades() {
+  if (!cfg.owner||!cfg.repo||!cfg.pat) return;
+  setSyncDot('busy');
+  try {
+    const file = await ghGet('data/trades.json');
+    if (file) {
+      ghFileSha = file.sha;
+      const decoded = decodeURIComponent(escape(atob(file.content.replace(/\n/g,''))));
+      trades = JSON.parse(decoded);
+      localStorage.setItem(CACHE_K, JSON.stringify(trades));
+      setSyncDot('ok'); setLastSync();
+    } else {
+      // File doesn't exist yet — create it
+      await pushTrades('Initialize trades.json');
+      setSyncDot('ok');
+    }
+  } catch(e) { setSyncDot('err'); console.warn('Fetch error', e); toast('GitHub sync error: '+e.message); }
+}
+async function pushTrades(msg='Update trades') {
+  if (!cfg.owner||!cfg.repo||!cfg.pat) return;
+  setSyncDot('busy');
+  try {
+    const result = await ghPut('data/trades.json', trades, ghFileSha, msg);
+    ghFileSha = result.content.sha;
+    localStorage.setItem(CACHE_K, JSON.stringify(trades));
+    setSyncDot('ok'); setLastSync();
+    toast('Saved to GitHub ✓');
+  } catch(e) { setSyncDot('err'); toast('GitHub push failed: '+e.message); }
+}
+async function manualSync() { await fetchTrades(); renderAll(); toast('Synced from GitHub'); }
+function updateGitBadge() {
+  const b=g('git-badge');
+  if (cfg.owner&&cfg.repo) { b.textContent=cfg.owner+'/'+cfg.repo; b.className='badge badge-green'; }
+  else { b.textContent='not configured'; b.className='badge badge-blue'; }
+}
+
+// ═══════════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════════
+function openSettings(){syncCfgUI();g('modal-settings').classList.add('open');}
+function closeSettings(){g('modal-settings').classList.remove('open');}
+function syncCfgUI(){
+  g('sbal').value=cfg.balance||''; g('stck').value=cfg.tick||''; g('scom').value=cfg.comm||'';
+  g('sown').value=cfg.owner||''; g('srep').value=cfg.repo||''; g('spat').value=cfg.pat||'';
+}
+function saveSettings(){
+  const op=g('op').value, np=g('np').value;
+  if(op||np){
+    if(op!==(localStorage.getItem(PIN_K)||DEF_PIN)){toast('Old PIN wrong');return;}
+    if(np.length<4){toast('PIN min 4 chars');return;}
+    localStorage.setItem(PIN_K,np); toast('PIN updated');
+  }
+  const newOwner=g('sown').value.trim(), newRepo=g('srep').value.trim(), newPat=g('spat').value.trim();
+  cfg={...cfg, balance:parseFloat(g('sbal').value)||25000, tick:parseFloat(g('stck').value)||5, comm:parseFloat(g('scom').value)||4, owner:newOwner, repo:newRepo, pat:newPat};
+  saveCfg(); closeSettings(); updateGitBadge();
+  if(newOwner&&newRepo&&newPat){fetchTrades().then(()=>renderAll()); toast('Settings saved — reconnecting');}
+  else toast('Settings saved');
+}
+
+// ═══════════════════════════════════════════════
+// TRADE CRUD
+// ═══════════════════════════════════════════════
+function openModal(id){
+  editId=id||null; g('modal-title').textContent=editId?'Edit Trade':'Add Trade';
+  if(editId){
+    const t=trades.find(x=>x.id===editId); if(!t) return;
+    g('td').value=t.date; g('tt').value=t.time||''; g('ts').value=t.symbol; g('tsi').value=t.side;
+    g('tq').value=t.qty; g('tk').value=t.tickValue||cfg.tick;
+    g('te').value=t.entryPrice; g('tx').value=t.exitPrice;
+    g('tc').value=t.commission||0; g('tdu').value=t.duration||'';
+    g('tr').value=t.rMultiple||''; g('tst').value=t.setup||''; g('tg').value=t.grade||''; g('tn').value=t.notes||'';
+  } else {
+    g('td').value=today(); g('tt').value=now(); g('ts').value=''; g('tsi').value='Long';
+    g('tq').value=1; g('tk').value=cfg.tick; g('te').value=''; g('tx').value='';
+    g('tc').value=cfg.comm; g('tdu').value=''; g('tr').value=''; g('tst').value=''; g('tg').value=''; g('tn').value='';
+  }
+  calcP(); g('modal').classList.add('open');
+}
+function closeModal(){g('modal').classList.remove('open');}
+function calcP(){
+  const e=parseFloat(g('te').value), x=parseFloat(g('tx').value);
+  const q=parseFloat(g('tq').value)||1, k=parseFloat(g('tk').value)||cfg.tick;
+  const c=parseFloat(g('tc').value)||0, s=g('tsi').value, el=g('pnlcalc');
+  if(!e||!x){el.textContent='—';el.style.color='var(--text)';return;}
+  const net=(s==='Long'?x-e:e-x)*q*k-c;
+  el.textContent=(net>=0?'+':'')+fmt(net); el.style.color=net>=0?'var(--green)':'var(--red)';
+}
+async function saveTrade(){
+  const date=g('td').value, sym=g('ts').value.trim().toUpperCase();
+  const e=parseFloat(g('te').value), x=parseFloat(g('tx').value);
+  const q=parseFloat(g('tq').value)||1, k=parseFloat(g('tk').value)||cfg.tick;
+  if(!date||!sym||!e||!x){toast('Fill required fields');return;}
+  const s=g('tsi').value, c=parseFloat(g('tc').value)||0;
+  const gross=(s==='Long'?x-e:e-x)*q*k;
+  const t={id:editId||uid(),date,symbol:sym,side:s,qty:q,tickValue:k,
+    time:g('tt').value,entryPrice:e,exitPrice:x,commission:c,
+    grossPnl:gross,netPnl:gross-c,
+    duration:parseFloat(g('tdu').value)||0,rMultiple:parseFloat(g('tr').value)||null,
+    setup:g('tst').value.trim(),grade:g('tg').value,notes:g('tn').value.trim(),source:'manual'};
+  if(editId){const i=trades.findIndex(x=>x.id===editId);trades[i]=t;}
+  else trades.unshift(t);
+  closeModal(); renderAll(); populateSDL(); toast('Saved locally — pushing to GitHub…');
+  await pushTrades(editId?`Update trade ${sym} ${date}`:`Add trade ${sym} ${date}`);
+}
+async function deleteTrade(id,e){
+  e.stopPropagation(); if(!confirm('Delete this trade?')) return;
+  trades=trades.filter(x=>x.id!==id);
+  renderAll(); toast('Deleted — pushing to GitHub…');
+  await pushTrades('Delete trade');
+}
+
+// ═══════════════════════════════════════════════
+// CSV IMPORT
+// ═══════════════════════════════════════════════
+function importCSV(input){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    const lines=e.target.result.split('\n').filter(l=>l.trim());
+    if(lines.length<2){toast('Empty CSV');return;}
+    const hdr=lines[0].split(',').map(h=>h.trim().toLowerCase().replace(/[^a-z0-9]/g,''));
+    const ci=(...ns)=>{for(const n of ns){const i=hdr.indexOf(n);if(i>=0)return i;}return -1;};
+    const cD=ci('date','tradedate'),cT=ci('time','tradetime'),cS=ci('symbol','instrument','ticker');
+    const cSi=ci('buysell','side','type','direction','action'),cQ=ci('quantity','qty','contracts');
+    const cP=ci('price','fillprice','tradeprice','avgprice'),cC=ci('commission','comm','fee');
+    const fills=lines.slice(1).map(l=>{
+      const v=l.split(',').map(x=>x.trim().replace(/^"|"$/g,''));
+      return{date:cD>=0?v[cD]:today(),time:cT>=0?v[cT]:'',symbol:cS>=0?v[cS].toUpperCase():'UNK',
+        side:cSi>=0?v[cSi]:'',qty:cQ>=0?parseFloat(v[cQ])||1:1,price:cP>=0?parseFloat(v[cP])||0:0,comm:cC>=0?parseFloat(v[cC])||0:0};
+    }).filter(f=>f.price&&f.symbol);
+    const bySym={};
+    fills.forEach(f=>{const k=f.symbol+'|'+f.date;if(!bySym[k])bySym[k]={b:[],s:[]};(/^(buy|b|long)/i.test(f.side)?bySym[k].b:bySym[k].s).push(f);});
+    let added=0;
+    Object.values(bySym).forEach(g=>{
+      for(let i=0;i<Math.min(g.b.length,g.s.length);i++){
+        const b=g.b[i],s=g.s[i],q=Math.min(b.qty,s.qty),c=(b.comm+s.comm)||cfg.comm;
+        const gross=(s.price-b.price)*q*cfg.tick;
+        trades.unshift({id:uid(),date:b.date,time:b.time,symbol:b.symbol,side:'Long',qty:q,
+          tickValue:cfg.tick,entryPrice:b.price,exitPrice:s.price,commission:c,
+          grossPnl:gross,netPnl:gross-c,duration:0,rMultiple:null,
+          setup:'',grade:'',notes:'Imported CSV',source:'auto'});
+        added++;
+      }
+    });
+    renderAll(); toast(`Imported ${added} trades — pushing to GitHub…`);
+    await pushTrades(`Import ${added} trades from CSV`);
+    input.value='';
+  };
+  reader.readAsText(file);
+}
+
+// ═══════════════════════════════════════════════
+// STATS ENGINE
+// ═══════════════════════════════════════════════
+function calcStats(ts){
+  if(!ts.length)return null;
+  const w=ts.filter(t=>t.netPnl>0),l=ts.filter(t=>t.netPnl<0);
+  const gW=w.reduce((s,t)=>s+t.netPnl,0),gL=Math.abs(l.reduce((s,t)=>s+t.netPnl,0));
+  const pf=gL>0?gW/gL:(gW>0?9.99:0);
+  let pk=0,dd=0,eq=0;
+  const curve=[...ts].sort((a,b)=>a.date.localeCompare(b.date)||(a.time||'').localeCompare(b.time||'')).map(t=>{
+    eq+=t.netPnl;if(eq>pk)pk=eq;const d=pk-eq;if(d>dd)dd=d;return{date:t.date,eq};
+  });
+  return{totalPnl:ts.reduce((s,t)=>s+t.netPnl,0),pf,wr:w.length/ts.length,
+    avgWin:w.length?gW/w.length:0,avgLoss:l.length?gL/l.length:0,maxDD:dd,
+    wins:w.length,losses:l.length,total:ts.length,
+    best:Math.max(...ts.map(t=>t.netPnl)),worst:Math.min(...ts.map(t=>t.netPnl)),curve};
+}
+const sumPnl=(ts)=>ts.reduce((s,t)=>s+t.netPnl,0);
+const todayPnl=()=>sumPnl(trades.filter(t=>t.date===today()));
+const weekPnl=()=>{const m=new Date(),mn=new Date(m);mn.setDate(m.getDate()-((m.getDay()+6)%7));mn.setHours(0,0,0,0);return sumPnl(trades.filter(t=>new Date(t.date+'T12:00:00')>=mn));};
+
+// ═══════════════════════════════════════════════
+// RENDER ALL
+// ═══════════════════════════════════════════════
+function renderAll(){renderDash();renderTrades();if(g('view-analytics').classList.contains('active'))renderAnalytics();if(g('view-calendar').classList.contains('active'))renderCalendar();}
+
+function renderDash(){
+  const s=calcStats(trades);
+  const sv=(id,val,cls)=>{g(id).textContent=val;if(cls)g(id).className='cv '+cls;};
+  sv('m-pnl',s?fmt(s.totalPnl):'—',s?(s.totalPnl>=0?'p':'n'):'');
+  g('m-pnl-sub').textContent=s?s.total+' trades':'—';
+  sv('m-wr',s?pct(s.wr):'—',s?(s.wr>=0.5?'p':'n'):'');
+  g('m-wr-sub').textContent=s?s.wins+'W / '+s.losses+'L':'—';
+  sv('m-pf',s?s.pf.toFixed(2):'—',s?(s.pf>=1?'p':'n'):'');
+  sv('m-aw',s?fmt(s.avgWin):'—','p'); sv('m-al',s?fmt(s.avgLoss):'—','n');
+  sv('m-dd',s?fmt(s.maxDD):'—','n');
+  g('m-today').textContent=fmt(todayPnl()); g('m-today').className='cv '+(todayPnl()>=0?'p':'n');
+  g('m-week').textContent=fmt(weekPnl()); g('m-week').className='cv '+(weekPnl()>=0?'p':'n');
+  sv('m-best',s?fmt(s.best):'—','p'); sv('m-worst',s?fmt(s.worst):'—','n');
+  mkChart('eqChart','eq',s); mkDayChart(); mkWLChart(s); mkSideChart(); mkRecent();
+}
+
+function mkChart(id,key,s){
+  const ctx=g(id);if(!ctx)return; if(charts[key])charts[key].destroy();
+  if(!s||!s.curve.length)return;
+  const data=s.curve.map(p=>+p.eq.toFixed(2)),pos=data[data.length-1]>=0;
+  charts[key]=new Chart(ctx,{type:'line',data:{labels:s.curve.map(p=>p.date.slice(5)),datasets:[{data,borderColor:pos?'#00e87a':'#ff4d6a',borderWidth:2,fill:true,backgroundColor:pos?'rgba(0,232,122,.06)':'rgba(255,77,106,.06)',pointRadius:0,tension:.3}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#6060a0',font:{size:10},maxTicksLimit:8},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#6060a0',font:{size:10},callback:v=>fmtS(v)},grid:{color:'rgba(255,255,255,.04)'}}}}});
+}
+function mkDayChart(){
+  const ctx=g('dayChart');if(!ctx)return;if(charts.day)charts.day.destroy();
+  const days={},now=new Date();
+  for(let i=29;i>=0;i--){const d=new Date(now);d.setDate(now.getDate()-i);days[d.toISOString().slice(0,10)]=0;}
+  trades.forEach(t=>{if(days.hasOwnProperty(t.date))days[t.date]+=t.netPnl;});
+  const vals=Object.values(days).map(v=>+v.toFixed(2));
+  charts.day=new Chart(ctx,{type:'bar',data:{labels:Object.keys(days).map(d=>d.slice(5)),datasets:[{data:vals,backgroundColor:vals.map(v=>v>=0?'rgba(0,232,122,.75)':'rgba(255,77,106,.7)'),borderRadius:3,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#6060a0',font:{size:10},maxTicksLimit:10},grid:{display:false}},y:{ticks:{color:'#6060a0',font:{size:10},callback:v=>fmtS(v)},grid:{color:'rgba(255,255,255,.04)'}}}}});
+}
+function mkWLChart(s){
+  const ctx=g('wlChart');if(!ctx)return;if(charts.wl)charts.wl.destroy();if(!s)return;
+  charts.wl=new Chart(ctx,{type:'doughnut',data:{labels:['Wins','Losses'],datasets:[{data:[s.wins,s.losses],backgroundColor:['rgba(0,232,122,.8)','rgba(255,77,106,.7)'],borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'right',labels:{color:'#9090b8',boxWidth:10,font:{size:11}}}}}});
+}
+function mkSideChart(){
+  const ctx=g('sideChart');if(!ctx)return;if(charts.side)charts.side.destroy();
+  const l=sumPnl(trades.filter(t=>t.side==='Long')),sh=sumPnl(trades.filter(t=>t.side==='Short'));
+  charts.side=new Chart(ctx,{type:'bar',data:{labels:['Long','Short'],datasets:[{data:[+l.toFixed(2),+sh.toFixed(2)],backgroundColor:[l>=0?'rgba(0,232,122,.7)':'rgba(255,77,106,.7)',sh>=0?'rgba(0,232,122,.7)':'rgba(255,77,106,.7)'],borderRadius:4,borderSkipped:false}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#6060a0',font:{size:10},callback:v=>fmtS(v)},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#9090b8',font:{size:12}},grid:{display:false}}}}});
+}
+function mkRecent(){
+  const tb=g('rtbody');
+  const r=[...trades].sort((a,b)=>b.date.localeCompare(a.date)||(b.time||'').localeCompare(a.time||'')).slice(0,8);
+  if(!r.length){tb.innerHTML='<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:30px;font-size:12px">No trades yet — add one or run the bridge script.</td></tr>';return;}
+  tb.innerHTML=r.map(t=>`<tr onclick="openModal('${t.id}')">
+    <td>${t.date}</td><td>${t.time||'—'}</td><td class="sym">${t.symbol}</td>
+    <td class="${t.side==='Long'?'sl':'ss'}">${t.side}</td><td>${t.qty}</td>
+    <td>${f3(t.entryPrice)}</td><td>${f3(t.exitPrice)}</td>
+    <td class="${t.netPnl>=0?'pc':'nc'}" style="font-weight:600">${fmt(t.netPnl)}</td>
+    <td>${t.grade?`<span class="gb g${t.grade}">${t.grade}</span>`:'—'}</td>
+    <td><span class="${t.source==='auto'?'src-a':'src-m'}">${t.source==='auto'?'⬤ auto':'⬤ manual'}</span></td>
+  </tr>`).join('');
+}
+
+// TRADES TABLE
+function getF(){
+  const ff=g('ff').value,ft=g('ft').value,sym=g('fsym').value.trim().toUpperCase();
+  const sd=g('fsd').value,gr=g('fgr').value,sr=g('fsr').value;
+  return trades.filter(t=>(!ff||t.date>=ff)&&(!ft||t.date<=ft)&&(!sym||t.symbol.includes(sym))&&(!sd||t.side===sd)&&(!gr||t.grade===gr)&&(!sr||t.source===sr));
+}
+function renderTrades(){
+  const f=getF().sort((a,b)=>{const av=a[sortCol]??'',bv=b[sortCol]??'';return(typeof av==='number'?av-bv:String(av).localeCompare(String(bv)))*sortDir;});
+  g('tcnt').textContent=f.length+' Trade'+(f.length!==1?'s':'');
+  const tp=sumPnl(f); g('tsum').textContent='Total: '+fmt(tp); g('tsum').style.color=tp>=0?'var(--green)':'var(--red)';
+  const tb=g('ttbody');
+  if(!f.length){tb.innerHTML='<tr><td colspan="14" style="text-align:center;color:var(--muted);padding:40px;font-size:12px">No trades match</td></tr>';return;}
+  tb.innerHTML=f.map(t=>`<tr onclick="openModal('${t.id}')">
+    <td>${t.date}</td><td>${t.time||'—'}</td><td class="sym">${t.symbol}</td>
+    <td class="${t.side==='Long'?'sl':'ss'}">${t.side}</td><td>${t.qty}</td>
+    <td>${f3(t.entryPrice)}</td><td>${f3(t.exitPrice)}</td>
+    <td class="${t.netPnl>=0?'pc':'nc'}" style="font-weight:600">${fmt(t.netPnl)}</td>
+    <td style="color:var(--muted)">${t.rMultiple?t.rMultiple.toFixed(2)+'R':'—'}</td>
+    <td style="color:var(--muted)">${t.duration?t.duration+'m':'—'}</td>
+    <td>${t.grade?`<span class="gb g${t.grade}">${t.grade}</span>`:'—'}</td>
+    <td style="color:var(--muted);font-size:11px">${t.setup||'—'}</td>
+    <td><span class="${t.source==='auto'?'src-a':'src-m'}">${t.source==='auto'?'⬤ auto':'⬤ manual'}</span></td>
+    <td><div class="ra">
+      <button class="btn-ic btn btn-sm" onclick="openModal('${t.id}');event.stopPropagation()">✎</button>
+      <button class="btn-ic btn btn-sm btn-d" onclick="deleteTrade('${t.id}',event)">✕</button>
+    </div></td>
+  </tr>`).join('');
+}
+function srt(col){if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=-1;}renderTrades();}
+function qf(p){const n=new Date(),iso=d=>d.toISOString().slice(0,10);
+  if(p==='today'){g('ff').value=iso(n);g('ft').value=iso(n);}
+  if(p==='week'){const m=new Date(n);m.setDate(n.getDate()-((n.getDay()+6)%7));g('ff').value=iso(m);g('ft').value=iso(n);}
+  if(p==='month'){g('ff').value=iso(new Date(n.getFullYear(),n.getMonth(),1));g('ft').value=iso(n);}
+  renderTrades();}
+function clearF(){['ff','ft','fsym','fsd','fgr','fsr'].forEach(id=>{const e=g(id);if(e)e.value='';});renderTrades();}
+
+// ANALYTICS
+function renderAnalytics(){mkSymC();mkDowC();mkHrC();mkDurC();mkSetupT();mkStreakT();}
+function barChart(id,key,labels,data,colors){
+  const ctx=g(id);if(!ctx)return;if(charts[key])charts[key].destroy();
+  charts[key]=new Chart(ctx,{type:'bar',data:{labels,datasets:[{data,backgroundColor:colors||data.map(v=>v>=0?'rgba(0,232,122,.75)':'rgba(255,77,106,.75)'),borderRadius:4,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#9090b8',font:{size:10}},grid:{display:false}},y:{ticks:{color:'#6060a0',font:{size:10},callback:v=>fmtS(v)},grid:{color:'rgba(255,255,255,.04)'}}}}});}
+function mkSymC(){const m={};trades.forEach(t=>{m[t.symbol]=(m[t.symbol]||0)+t.netPnl;});const s=Object.entries(m).sort((a,b)=>b[1]-a[1]);barChart('symChart','sym',s.map(x=>x[0]),s.map(x=>+x[1].toFixed(2)));}
+function mkDowC(){const p=[0,0,0,0,0];trades.forEach(t=>{const d=new Date(t.date+'T12:00:00'),dw=(d.getDay()+6)%7;if(dw<5)p[dw]+=t.netPnl;});barChart('dowChart','dow',['Mon','Tue','Wed','Thu','Fri'],p.map(v=>+v.toFixed(2)));}
+function mkHrC(){const p={};trades.forEach(t=>{if(!t.time)return;const h=parseInt(t.time);p[h]=(p[h]||0)+t.netPnl;});const hs=Object.keys(p).map(Number).sort((a,b)=>a-b);barChart('hrChart','hr',hs.map(h=>`${h}:00`),hs.map(h=>+p[h].toFixed(2)),hs.map(h=>p[h]>=0?'rgba(77,157,255,.7)':'rgba(255,77,106,.6)'));}
+function mkDurC(){const b={'<5m':0,'5-15m':0,'15-30m':0,'30-60m':0,'1-2h':0,'2h+':0};trades.filter(t=>t.duration>0).forEach(t=>{const d=t.duration;b[d<5?'<5m':d<15?'5-15m':d<30?'15-30m':d<60?'30-60m':d<120?'1-2h':'2h+']++;});const ctx=g('durChart');if(!ctx)return;if(charts.dur)charts.dur.destroy();charts.dur=new Chart(ctx,{type:'bar',data:{labels:Object.keys(b),datasets:[{data:Object.values(b),backgroundColor:'rgba(160,96,255,.7)',borderRadius:4,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#9090b8',font:{size:10}},grid:{display:false}},y:{ticks:{color:'#6060a0',font:{size:10},stepSize:1},grid:{color:'rgba(255,255,255,.04)'}}}}});}
+function mkSetupT(){const m={};trades.forEach(t=>{const k=t.setup||'No Setup';if(!m[k])m[k]={p:0,w:0,l:0};m[k].p+=t.netPnl;t.netPnl>=0?m[k].w++:m[k].l++;});const r=Object.entries(m).sort((a,b)=>b[1].p-a[1].p);g('setupbody').innerHTML=!r.length?'<tr><td colspan="4" style="color:var(--muted);text-align:center;padding:20px;font-size:12px">No data</td></tr>':r.map(([k,v])=>`<tr><td>${k}</td><td>${v.w+v.l}</td><td>${pct(v.w/(v.w+v.l)||0)}</td><td class="${v.p>=0?'pc':'nc'}">${fmt(v.p)}</td></tr>`).join('');}
+function mkStreakT(){const s=[...trades].sort((a,b)=>a.date.localeCompare(b.date));let cur=0,mW=0,mL=0,last=null;s.forEach(t=>{const sg=t.netPnl>=0?1:-1;sg===last?cur++:(cur=1,last=sg);if(sg===1&&cur>mW)mW=cur;if(sg===-1&&cur>mL)mL=cur;});const fc=s.length?(s[s.length-1].netPnl>=0?cur:-cur):0;const days=[...new Set(trades.map(t=>t.date))],pd=[...new Set(trades.filter(t=>t.netPnl>=0).map(t=>t.date))];g('streakbody').innerHTML=[['Current Streak',fc>0?`<span class="pc">+${fc}W</span>`:fc<0?`<span class="nc">${fc}L</span>`:'—'],['Best Win Streak',`<span class="pc">${mW}W</span>`],['Worst Loss Streak',`<span class="nc">${mL}L</span>`],['Profitable Days',`${pd.length} / ${days.length}`],['Day Win Rate',days.length?pct(pd.length/days.length):'—'],['Avg Trades/Day',days.length?(trades.length/days.length).toFixed(1):'—'],['Total Trades',trades.length]].map(([k,v])=>`<tr><td>${k}</td><td>${v}</td></tr>`).join('');}
+
+// CALENDAR
+function renderCalendar(){
+  const y=calDate.getFullYear(),m=calDate.getMonth();
+  g('cal-title').textContent=calDate.toLocaleDateString('en-US',{month:'long',year:'numeric'});
+  const byDay={};trades.forEach(t=>{if(!byDay[t.date])byDay[t.date]={pnl:0,cnt:0};byDay[t.date].pnl+=t.netPnl;byDay[t.date].cnt++;});
+  const first=new Date(y,m,1),last=new Date(y,m+1,0),sdow=(first.getDay()+6)%7;
+  const grid=g('calgrid');grid.innerHTML='';
+  for(let i=0;i<sdow;i++){const e=document.createElement('div');e.className='calempty';grid.appendChild(e);}
+  const td=today();
+  for(let day=1;day<=last.getDate();day++){
+    const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const data=byDay[ds];
+    const cell=document.createElement('div');
+    cell.className='calcell'+(data?' '+(data.pnl>=0?'pos':'neg'):'')+(ds===td?' today':'');
+    cell.innerHTML=`<span class="dn">${day}</span>${data?`<span class="dp" style="color:${data.pnl>=0?'var(--green)':'var(--red)'}">${fmtS(data.pnl)}</span>`:''}`;
+    if(data) cell.onclick=()=>showCalDay(ds);
+    grid.appendChild(cell);
+  }
+}
+function calPrev(){calDate=new Date(calDate.getFullYear(),calDate.getMonth()-1,1);renderCalendar();}
+function calNext(){calDate=new Date(calDate.getFullYear(),calDate.getMonth()+1,1);renderCalendar();}
+function showCalDay(ds){
+  const ts=trades.filter(t=>t.date===ds),pnl=sumPnl(ts);
+  g('caldt-title').textContent=new Date(ds+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'});
+  g('caldt-body').innerHTML=`<div style="display:flex;gap:16px;margin-bottom:12px">
+    <div><div style="font-size:10px;color:var(--muted);font-family:var(--mono)">DAY P&L</div><div style="font-size:20px;font-weight:600;font-family:var(--mono);color:${pnl>=0?'var(--green)':'var(--red)'}">${fmt(pnl)}</div></div>
+    <div><div style="font-size:10px;color:var(--muted);font-family:var(--mono)">TRADES</div><div style="font-size:20px;font-weight:600;font-family:var(--mono)">${ts.length}</div></div>
+  </div>${ts.map(t=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:12px">
+    <div style="display:flex;justify-content:space-between"><span style="color:var(--blue)">${t.symbol}</span><span class="${t.netPnl>=0?'pc':'nc'}">${fmt(t.netPnl)}</span></div>
+    <div style="color:var(--muted);font-size:11px;margin-top:2px">${t.side}·${t.qty}@${f3(t.entryPrice)}→${f3(t.exitPrice)}${t.setup?' · '+t.setup:''}</div>
+  </div>`).join('')}`;
+}
+
+// NAVIGATION
+function gv(name,btn){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  g('view-'+name).classList.add('active');
+  if(btn)btn.classList.add('active');
+  if(name==='analytics')renderAnalytics();
+  if(name==='calendar')renderCalendar();
+}
+
+// EXPORT/RESTORE
+function exportJSON(){const b=new Blob([JSON.stringify({trades},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='tradelog_backup_'+today()+'.json';a.click();toast('Backup downloaded');}
+async function restoreJSON(input){const file=input.files[0];if(!file)return;const r=new FileReader();r.onload=async e=>{try{const d=JSON.parse(e.target.result);if(d.trades){trades=d.trades;renderAll();toast('Restored '+d.trades.length+' trades — pushing to GitHub…');await pushTrades('Restore from backup');}}catch(e){toast('Invalid file');}};r.readAsText(file);closeSettings();}
+function clearAll(){if(!confirm('Delete ALL local data?'))return;trades=[];localStorage.removeItem(CACHE_K);renderAll();toast('Cleared locally');}
+
+// SDL
+function populateSDL(){const s=[...new Set(trades.map(t=>t.setup).filter(Boolean))];const dl=g('sdl');if(dl)dl.innerHTML=s.map(x=>`<option value="${x}">`).join('');}
+
+// ═══════════════════════════════════════════════
+// SCRIPTS CONTENT
+// ═══════════════════════════════════════════════
+const BRIDGE_PY = `# sc_auto_bridge.py
+# Reads Sierra Chart fills, pairs round-trips, pushes to GitHub via API
+# Run via Windows Task Scheduler at market close — no git install needed
+#
+# pip install requests
+
+import json, csv, os, hashlib, logging, time, base64
+from datetime import datetime, date
+from pathlib import Path
+import requests
+
+# ─── CONFIG (written by setup_windows.bat) ──────────────────────────
+CFG = json.loads(Path(__file__).parent.joinpath("config.json").read_text())
+
+GH_TOKEN    = CFG["gh_token"]    # GitHub PAT
+GH_OWNER    = CFG["gh_owner"]    # your GitHub username
+GH_REPO     = CFG["gh_repo"]     # repo name
+GH_BRANCH   = CFG.get("gh_branch", "main")
+SC_DIR      = Path(CFG["sc_dir"])
+
+TICK_VALUES = {
+    "NQ":5.0,"MNQ":0.5,"ES":12.5,"MES":1.25,"YM":5.0,"MYM":0.5,
+    "RTY":10.0,"M2K":1.0,"GC":10.0,"MGC":1.0,"SI":25.0,
+    "CL":10.0,"NG":10.0,"ZB":31.25,"ZN":31.25,"ZF":31.25,
+}
+DEF_TICK = float(CFG.get("default_tick", 5.0))
+DEF_COMM = float(CFG.get("default_comm", 4.0))
+
+# ─── LOGGING ─────────────────────────────────────────────────────────
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[logging.FileHandler(Path(__file__).parent/"sc_bridge.log"), logging.StreamHandler()]
+)
+log = logging.getLogger("bridge")
+
+GH_API = "https://api.github.com"
+GH_HEADERS = {
+    "Authorization": f"token {GH_TOKEN}",
+    "Accept": "application/vnd.github.v3+json",
+}
+
+# ─── GITHUB FILE OPS ─────────────────────────────────────────────────
+def gh_get_file(path):
+    r = requests.get(f"{GH_API}/repos/{GH_OWNER}/{GH_REPO}/contents/{path}",
+                     headers=GH_HEADERS, timeout=15)
+    if r.status_code == 404:
+        return None, None
+    r.raise_for_status()
+    data = r.json()
+    content = json.loads(base64.b64decode(data["content"]).decode())
+    return content, data["sha"]
+
+def gh_put_file(path, content, sha, message):
+    body = {
+        "message": message,
+        "content": base64.b64encode(json.dumps(content, indent=2).encode()).decode(),
+        "branch": GH_BRANCH,
+        "committer": {"name": "TradeLog Bridge", "email": "bridge@tradelog.local"}
+    }
+    if sha:
+        body["sha"] = sha
+    r = requests.put(f"{GH_API}/repos/{GH_OWNER}/{GH_REPO}/contents/{path}",
+                     headers=GH_HEADERS, json=body, timeout=20)
+    r.raise_for_status()
+    return r.json()
+
+# ─── FILLS PARSER ────────────────────────────────────────────────────
+def find_fills():
+    patterns = ["AccountTrade*.csv","TradeAccount*.csv","Fills*.csv","*Fill*.csv"]
+    files = []
+    for pat in patterns:
+        files.extend(SC_DIR.glob(pat))
+    if not files:
+        for f in SC_DIR.glob("*.csv"):
+            try:
+                hdr = f.open(errors="replace").readline().lower()
+                if any(k in hdr for k in ["buysell","price","quantity","symbol"]):
+                    files.append(f)
+            except: pass
+    return files
+
+def parse_fills(filepath):
+    fills = []
+    with open(filepath, errors="replace") as f:
+        sample = f.read(2048); f.seek(0)
+        delim = "\\t" if sample.count("\\t") > sample.count(",") else ","
+        reader = csv.DictReader(f, delimiter=delim)
+        hdrs = {h.strip().lower().replace(" ","").replace("/",""):h for h in (reader.fieldnames or [])}
+        def col(*ns):
+            for n in ns:
+                if n in hdrs: return hdrs[n]
+        cDate=col("date","tradedate","filldate")
+        cTime=col("time","tradetime","filltime")
+        cSym=col("symbol","instrument","ticker","contract")
+        cSide=col("buysell","buyorsell","side","direction","type","action")
+        cQty=col("quantity","qty","filledqty","contracts")
+        cPrice=col("price","fillprice","tradeprice","avgprice","executionprice")
+        cComm=col("commission","comm","fee","fees")
+        for row in reader:
+            try:
+                sym=(row.get(cSym,"")or"").strip().upper()
+                if not sym: continue
+                price=float((row.get(cPrice,"0")or"0").replace(",",""))
+                if price<=0: continue
+                raw_date=row.get(cDate,"")or""
+                trade_date=None
+                for fmt in ["%Y-%m-%d","%m/%d/%Y","%d/%m/%Y","%Y%m%d"]:
+                    try: trade_date=datetime.strptime(raw_date.strip(),fmt).strftime("%Y-%m-%d"); break
+                    except: pass
+                if not trade_date: trade_date=str(date.today())
+                raw_time=row.get(cTime,"")or""
+                trade_time=""
+                for fmt in ["%H:%M:%S","%H:%M","%I:%M %p"]:
+                    try: trade_time=datetime.strptime(raw_time.strip(),fmt).strftime("%H:%M"); break
+                    except: pass
+                side_raw=(row.get(cSide,"")or"").strip()
+                is_buy=any(s in side_raw.lower() for s in ["buy","long","b"])
+                qty=abs(float((row.get(cQty,"1")or"1").replace(",","")))or 1
+                comm=abs(float((row.get(cComm,"0")or"0").replace(",","")))
+                base_sym="".join(c for c in sym if not c.isdigit()).rstrip("FGHJKMNQUVXZ")
+                fills.append({"date":trade_date,"time":trade_time,"symbol":sym,"base":base_sym,
+                               "is_buy":is_buy,"qty":qty,"price":price,"comm":comm,
+                               "fid":hashlib.md5(f"{trade_date}{trade_time}{sym}{side_raw}{price}{qty}".encode()).hexdigest()})
+            except: pass
+    return fills
+
+# ─── FILL PAIRING (FIFO) ─────────────────────────────────────────────
+def pair_fills(fills, today_only=True):
+    today_str = str(date.today())
+    if today_only:
+        fills = [f for f in fills if f["date"] == today_str]
+    from collections import defaultdict, deque
+    by_sym = defaultdict(lambda: {"b":deque(),"s":deque()})
+    for f in sorted(fills, key=lambda x:(x["date"],x["time"])):
+        by_sym[f["base"]+"|"+f["date"]]["b" if f["is_buy"] else "s"].append(f)
+    trades = []
+    for key, sides in by_sym.items():
+        buys, sells = sides["b"], sides["s"]
+        rb=rs=0.0; cb=cs=None
+        while buys or sells or (rb>0 and rs>0):
+            if rb<=0 and buys: cb=buys.popleft(); rb=cb["qty"]
+            if rs<=0 and sells: cs=sells.popleft(); rs=cs["qty"]
+            if not cb or not cs: break
+            mq=min(rb,rs)
+            base=cb["base"]; tv=TICK_VALUES.get(base,DEF_TICK)
+            gross=(cs["price"]-cb["price"])*mq*tv
+            comm=((cb["comm"]+cs["comm"])/max(cb["qty"]+cs["qty"],1))*2*mq or DEF_COMM
+            tid=hashlib.md5(f"{cb['fid']}{cs['fid']}{mq}".encode()).hexdigest()
+            trades.append({"id":tid,"date":cb["date"],"time":cb["time"]or None,
+                "symbol":cb["symbol"],"side":"Long","qty":mq,"tickValue":tv,
+                "entryPrice":cb["price"],"exitPrice":cs["price"],
+                "commission":round(comm,2),"grossPnl":round(gross,2),
+                "netPnl":round(gross-comm,2),"duration":0,"rMultiple":None,
+                "setup":None,"grade":None,"notes":None,"source":"auto"})
+            rb-=mq; rs-=mq
+    return trades
+
+# ─── MAIN SYNC ───────────────────────────────────────────────────────
+def sync():
+    log.info("="*55)
+    log.info(f"Bridge starting — {datetime.now():%Y-%m-%d %H:%M:%S}")
+
+    # Load existing trades from GitHub
+    existing, sha = gh_get_file("data/trades.json")
+    if existing is None:
+        existing, sha = [], None
+    existing_ids = {t["id"] for t in existing}
+    log.info(f"Existing trades in repo: {len(existing)}")
+
+    # Parse fills
+    files = find_fills()
+    if not files:
+        log.warning(f"No fills files found in {SC_DIR}")
+        return
+
+    all_fills = []
+    for f in files:
+        fills = parse_fills(f)
+        log.info(f"Parsed {len(fills)} fills from {f.name}")
+        all_fills.extend(fills)
+
+    new_trades = pair_fills(all_fills, today_only=True)
+    log.info(f"Paired today's fills: {len(new_trades)} round trips")
+
+    deduped = [t for t in new_trades if t["id"] not in existing_ids]
+    log.info(f"New (not yet in repo): {len(deduped)}")
+
+    if not deduped:
+        log.info("Nothing new. Done.")
+        try:
+            from win10toast import ToastNotifier
+            ToastNotifier().show_toast("TradeLog", "Sync complete — no new trades", duration=5, threaded=True)
+        except: pass
+        return
+
+    merged = deduped + existing  # newest first
+    result = gh_put_file("data/trades.json", merged, sha,
+                         f"Auto-sync {len(deduped)} trades {date.today()}")
+    log.info(f"Pushed to GitHub: commit {result['commit']['sha'][:8]}")
+
+    pnl = sum(t["netPnl"] for t in deduped)
+    msg = f"Synced {len(deduped)} trades. Today P&L: {'+'if pnl>=0 else ''}${pnl:.2f}"
+    log.info(msg)
+    try:
+        from win10toast import ToastNotifier
+        ToastNotifier().show_toast("TradeLog Sync", msg, duration=8, threaded=True)
+    except: pass
+
+if __name__ == "__main__":
+    sync()`;
+
+const BAT = `@echo off
+setlocal enabledelayedexpansion
+title TradeLog Pro — Git Setup
+color 0B
+echo.
+echo  ╔══════════════════════════════════════════════╗
+echo  ║  TradeLog Pro — Windows Auto-Sync Setup      ║
+echo  ║  Stores fills as git commits in your repo    ║
+echo  ╚══════════════════════════════════════════════╝
+echo.
+
+REM ── Check Python ────────────────────────────────────────────────
+python --version >nul 2>&1
+if %errorlevel% neq 0 (
+    echo [*] Installing Python via winget...
+    winget install Python.Python.3.12 --silent --accept-package-agreements
+)
+echo [+] Python OK
+
+REM ── Install dependencies ─────────────────────────────────────────
+pip install requests win10toast --quiet
+echo [+] Dependencies installed
+
+REM ── Collect config ────────────────────────────────────────────────
+echo.
+echo ── GitHub Configuration ─────────────────────────────────────────
+set /p GH_OWNER="  GitHub username: "
+set /p GH_REPO="  Repository name [tradelog]: "
+if "!GH_REPO!"=="" set GH_REPO=tradelog
+set /p GH_TOKEN="  Personal Access Token (github_pat_...): "
+set /p GH_BRANCH="  Branch [main]: "
+if "!GH_BRANCH!"=="" set GH_BRANCH=main
+
+echo.
+echo ── Sierra Chart ─────────────────────────────────────────────────
+set /p SC_DIR="  SC data directory [C:\\SierraChart\\Data]: "
+if "!SC_DIR!"=="" set SC_DIR=C:\\SierraChart\\Data
+
+echo.
+echo ── Trading parameters ───────────────────────────────────────────
+set /p CLOSE_H="  Market close hour ET (24h) [16]: "
+if "!CLOSE_H!"=="" set CLOSE_H=16
+set /p CLOSE_M="  Market close minute [30]: "
+if "!CLOSE_M!"=="" set CLOSE_M=30
+set /p DEF_TICK="  Default tick value $ [5.00]: "
+if "!DEF_TICK!"=="" set DEF_TICK=5.00
+set /p DEF_COMM="  Default commission $ [4.00]: "
+if "!DEF_COMM!"=="" set DEF_COMM=4.00
+
+REM ── Write config.json ─────────────────────────────────────────────
+set SDIR=%~dp0
+(
+  echo {
+  echo   "gh_token": "!GH_TOKEN!",
+  echo   "gh_owner": "!GH_OWNER!",
+  echo   "gh_repo": "!GH_REPO!",
+  echo   "gh_branch": "!GH_BRANCH!",
+  echo   "sc_dir": "!SC_DIR!",
+  echo   "default_tick": !DEF_TICK!,
+  echo   "default_comm": !DEF_COMM!
+  echo }
+) > "%SDIR%config.json"
+echo [+] config.json written
+
+REM ── Test GitHub API ───────────────────────────────────────────────
+echo.
+echo [*] Testing GitHub connection...
+python -c "import requests; r=requests.get('https://api.github.com/repos/!GH_OWNER!/!GH_REPO!',headers={'Authorization':'token !GH_TOKEN!'}); print('[+] Connected: '+r.json().get('full_name','?')) if r.ok else print('[!] Error HTTP '+str(r.status_code))"
+
+REM ── First sync ────────────────────────────────────────────────────
+echo.
+echo [*] Running first sync...
+python "%SDIR%sc_auto_bridge.py"
+
+REM ── Task Scheduler ────────────────────────────────────────────────
+echo.
+echo [*] Registering Task Scheduler job...
+schtasks /delete /tn "TradeLog Auto-Sync" /f >nul 2>&1
+set HH=!CLOSE_H!
+if !CLOSE_H! lss 10 set HH=0!CLOSE_H!
+schtasks /create /tn "TradeLog Auto-Sync" /tr "python \"%SDIR%sc_auto_bridge.py\"" /sc WEEKLY /d MON,TUE,WED,THU,FRI /st !HH!:!CLOSE_M! /rl HIGHEST /f
+
+if %errorlevel%==0 (
+    echo [+] Task Scheduler: runs weekdays at !HH!:!CLOSE_M!
+) else (
+    echo [!] Task Scheduler failed — run as Administrator
+)
+
+echo.
+echo  ╔═══════════════════════════════════════════════════════╗
+echo  ║  Setup complete!                                      ║
+echo  ║  Bridge runs every weekday at !HH!:!CLOSE_M!                ║
+echo  ║  Check sc_bridge.log for sync history                ║
+echo  ╚═══════════════════════════════════════════════════════╝
+echo.
+pause`;
+
+const GHA = `# .github/workflows/pages.yml
+# Deploys index.html to GitHub Pages on every push to main.
+# Trades push to data/trades.json → this workflow triggers → Pages updates.
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: \${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4`;
+
+function initScripts(){
+  g('bridge-code').textContent=BRIDGE_PY;
+  g('bat-code').textContent=BAT;
+  g('gha-code').textContent=GHA;
+}
+
+function dlAll(){
+  [
+    {name:'sc_auto_bridge.py',c:BRIDGE_PY,t:'text/x-python'},
+    {name:'setup_windows.bat',c:BAT,t:'text/plain'},
+    {name:'pages.yml',c:GHA,t:'text/yaml'},
+    {name:'README.txt',c:`TradeLog Pro — Git Setup
+========================
+
+REPO STRUCTURE
+--------------
+  index.html                  ← journal (host on GitHub/Cloudflare Pages)
+  data/trades.json            ← all your trades (auto-committed by bridge)
+  .github/workflows/pages.yml ← auto-deploy on every push
+  sc_auto_bridge.py           ← runs on trading PC
+  setup_windows.bat           ← one-click installer
+
+ONE-TIME SETUP
+--------------
+1. Create private GitHub repo named "tradelog"
+2. Push this folder to it:
+     git init && git add . && git commit -m "init" && git push
+3. Enable GitHub Pages:
+     Settings → Pages → Source: GitHub Actions
+4. Generate a Fine-grained PAT:
+     GitHub → Settings → Developer Settings → Personal Access Tokens
+     → Fine-grained → Read+Write on Contents for this repo
+5. Open setup_windows.bat on your trading PC → follow prompts
+6. Open journal URL → enter PIN (default: 1234) → paste PAT in setup wizard
+
+DAILY WORKFLOW
+--------------
+  Trade all day in Sierra Chart
+  4:30 PM → sc_auto_bridge.py runs automatically
+  Reads fills → pairs round-trips → pushes data/trades.json to GitHub
+  GitHub Actions deploys → journal updated on all devices in ~30s
+  Windows toast notification: "Synced X trades. P&L: +$XXX"
+
+HOSTING OPTIONS
+---------------
+  GitHub Pages (free, public URL) → enable in repo Settings → Pages
+  Cloudflare Pages (free, private repo) → Dashboard → Pages → Connect to Git
+    → Enable Cloudflare Access for login protection
+
+MANUAL SYNC
+-----------
+  python sc_auto_bridge.py
+  Or click ↻ Sync in the journal
+
+LOGS
+----
+  sc_bridge.log (in same folder as bridge script)
+`,t:'text/plain'},
+  ].forEach((f,i)=>setTimeout(()=>{const b=new Blob([f.c],{type:f.t});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=f.name;a.click();},i*350));
+  toast('Downloading 4 files…');
+}
+
+// UTILS
+function g(id){return document.getElementById(id);}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2);}
+function today(){return new Date().toISOString().slice(0,10);}
+function now(){return new Date().toTimeString().slice(0,5);}
+function fmt(n){if(n==null)return'—';return(n<0?'-':'+')+'\$'+Math.abs(n).toFixed(2);}
+function fmtS(n){if(!n&&n!==0)return'';const a=Math.abs(n),s=n<0?'-':'';return a>=1000?s+'\$'+(a/1000).toFixed(1)+'k':s+'\$'+a.toFixed(0);}
+function f3(n){return n!=null?n.toFixed(2):'—';}
+function pct(n){return(n*100).toFixed(1)+'%';}
+function toast(msg){const t=g('toast');t.textContent=msg;t.style.opacity='1';clearTimeout(t._t);t._t=setTimeout(()=>t.style.opacity='0',2500);}
+function cpCode(btn){const txt=btn.parentElement.querySelector('span')?.textContent||'';navigator.clipboard.writeText(txt).then(()=>{btn.textContent='✓';setTimeout(()=>btn.textContent='copy',1500);});}
+</script>
+</body>
+</html>
