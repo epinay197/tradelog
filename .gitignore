@@ -1,0 +1,5 @@
+config.json
+sc_bridge.log
+synced_ids.json
+*.pyc
+__pycache__/
