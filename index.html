@@ -201,7 +201,7 @@ tr:hover .ra{opacity:1}
   <div class="setup-box">
     <div class="setup-head">
       <h2>Connect Your GitHub Repo</h2>
-      <p>One-time setup · 3 minutes · everything lives in git</p>
+      <p>Optional · only needed to add/edit trades from this device</p>
     </div>
     <div class="setup-body">
       <div class="ibox">Your trades are stored in <code style="font-family:var(--mono);color:var(--blue)">data/trades.json</code> inside your GitHub repo. The journal reads and writes it directly via the GitHub API — no database needed.</div>
@@ -508,7 +508,7 @@ tr:hover .ra{opacity:1}
 // ═══════════════════════════════════════════════
 const PIN_K = 'tl_pin', CFG_K = 'tl_cfg', CACHE_K = 'tl_cache';
 const DEF_PIN = '1234';
-let cfg = { owner:'', repo:'', pat:'', balance:25000, tick:5, comm:4 };
+let cfg = { owner:'epinay197', repo:'tradelog', pat:'', balance:25000, tick:5, comm:4 };
 let trades = [], charts = {}, sortCol='date', sortDir=-1, calDate=new Date(), editId=null;
 let ghFileSha = null; // tracks current SHA for updates
 
@@ -524,8 +524,7 @@ function unlock() {
   if (pin !== stored) { g('pinErr').textContent = 'Incorrect PIN'; g('pinIn').value=''; return; }
   g('lock').style.display = 'none';
   loadCfg();
-  if (!cfg.owner || !cfg.repo || !cfg.pat) { g('setup').classList.add('open'); }
-  else { initApp(); }
+  initApp();
 }
 g('pinIn').addEventListener('keydown', e => { if(e.key==='Enter') unlock(); });
 
@@ -600,25 +599,24 @@ function setSyncDot(state) {
 }
 function setLastSync() { g('last-sync').textContent='Synced '+new Date().toLocaleTimeString(); }
 async function fetchTrades() {
-  if (!cfg.owner||!cfg.repo||!cfg.pat) return;
   setSyncDot('busy');
   try {
-    const file = await ghGet('data/trades.json');
-    if (file) {
-      ghFileSha = file.sha;
-      const decoded = decodeURIComponent(escape(atob(file.content.replace(/\n/g,''))));
-      trades = JSON.parse(decoded);
+    const url = 'https://epinay197.github.io/tradelog/data/trades.json?_='+Date.now();
+    const r = await fetch(url);
+    if (r.ok) {
+      trades = await r.json();
       localStorage.setItem(CACHE_K, JSON.stringify(trades));
       setSyncDot('ok'); setLastSync();
     } else {
-      // File doesn't exist yet — create it
-      await pushTrades('Initialize trades.json');
-      setSyncDot('ok');
+      setSyncDot('err'); toast('Could not load trades');
     }
-  } catch(e) { setSyncDot('err'); console.warn('Fetch error', e); toast('GitHub sync error: '+e.message); }
+    if (cfg.pat) {
+      try { const file = await ghGet('data/trades.json'); if (file) ghFileSha = file.sha; } catch(e) {}
+    }
+  } catch(e) { setSyncDot('err'); toast('Load error: '+e.message); }
 }
 async function pushTrades(msg='Update trades') {
-  if (!cfg.owner||!cfg.repo||!cfg.pat) return;
+  if (!cfg.pat) { toast('No PAT configured — add your GitHub token in Settings to enable saving'); return; }
   setSyncDot('busy');
   try {
     const result = await ghPut('data/trades.json', trades, ghFileSha, msg);
@@ -631,8 +629,8 @@ async function pushTrades(msg='Update trades') {
 async function manualSync() { await fetchTrades(); renderAll(); toast('Synced from GitHub'); }
 function updateGitBadge() {
   const b=g('git-badge');
-  if (cfg.owner&&cfg.repo) { b.textContent=cfg.owner+'/'+cfg.repo; b.className='badge badge-green'; }
-  else { b.textContent='not configured'; b.className='badge badge-blue'; }
+  if (cfg.pat) { b.textContent='read-write · epinay197/tradelog'; b.className='badge badge-green'; }
+  else { b.textContent='read-only · add PAT in Settings to write'; b.className='badge badge-blue'; }
 }
 
 // ═══════════════════════════════════════════════
