@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TradeLog Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#07070f;--s1:#0d0d1a;--s2:#12121f;--s3:#181828;--s4:#1f1f32;
+  --border:#252538;--border2:#2e2e48;
+  --text:#d0d0e8;--muted:#6060a0;
+  --green:#00e87a;--red:#ff4d6a;--blue:#4d9dff;--yellow:#ffd060;--purple:#a060ff;
+  --grbg:rgba(0,232,122,0.08);--rdbg:rgba(255,77,106,0.08);--blbg:rgba(77,157,255,0.1);
+  --ui:'Syne',sans-serif;--mono:'DM Mono',monospace;
+  --r:6px;--r2:10px;--r3:14px;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--ui);font-size:14px;padding:24px;max-width:1200px;margin:0 auto}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline}
+h1{font-size:24px;font-weight:700;margin-bottom:4px}
+h2{font-size:18px;font-weight:600;margin:32px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+h3{font-size:15px;font-weight:600;margin-bottom:8px}
+.meta{color:var(--muted);font-family:var(--mono);font-size:12px;margin-bottom:24px}
+.nav{margin-bottom:24px;display:flex;gap:12px;font-family:var(--mono);font-size:13px}
+
+/* Cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:24px}
+.card{background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px}
+.card-label{font-size:11px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+.card-val{font-size:20px;font-weight:700;font-family:var(--mono)}
+
+/* Tables */
+table{width:100%;border-collapse:collapse;margin:16px 0 28px;background:var(--s1);border-radius:var(--r2);overflow:hidden;border:1px solid var(--border)}
+caption{padding:12px 16px;text-align:left;font-weight:600;font-size:14px;background:var(--s2);border-bottom:1px solid var(--border)}
+th{padding:10px 14px;text-align:left;font-size:12px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.5px;background:var(--s2);border-bottom:1px solid var(--border)}
+td{padding:10px 14px;font-family:var(--mono);font-size:13px;border-bottom:1px solid var(--border)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(77,157,255,0.03)}
+td.muted{color:var(--muted)}
+
+/* Summary & Recs */
+.summary-box{background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:18px 20px;margin-bottom:16px;line-height:1.7;font-size:14px}
+.recs-box,.pat-box{background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:18px 20px;margin-bottom:24px}
+.recs-box ul,.pat-box ul{list-style:none;padding:0}
+.recs-box li,.pat-box li{padding:8px 12px;margin:6px 0;border-radius:var(--r);background:var(--s3);border-left:3px solid var(--yellow);font-size:13px;line-height:1.6}
+.pat-box li.g{border-left-color:var(--green)}
+.pat-box li.r{border-left-color:var(--red)}
+.pat-box li.m{border-left-color:var(--muted)}
+
+.section{margin-bottom:32px}
+
+/* Footer */
+.footer{text-align:center;color:var(--muted);font-family:var(--mono);font-size:11px;padding:32px 0;border-top:1px solid var(--border);margin-top:40px}
+</style>
+</head>
+<body>
+
+<h1>TradeLog Analytics</h1>
+<div class="meta">Generated: 2026-04-01 02:32 ET &nbsp;|&nbsp; 25 trades analyzed</div>
+<div class="nav"><a href="index.html">&larr; Trade Journal</a></div>
+
+
+    <div class="cards">
+      <div class="card"><div class="card-label">Total Trades</div><div class="card-val">25</div></div>
+      <div class="card"><div class="card-label">Win Rate</div><div class="card-val" style="color:var(--green)">64.0%</div></div>
+      <div class="card"><div class="card-label">Expectancy</div><div class="card-val" style="color:var(--green)">$+222.53</div></div>
+      <div class="card"><div class="card-label">Profit Factor</div><div class="card-val" style="color:var(--green)">1.24</div></div>
+      <div class="card"><div class="card-label">Total P&amp;L</div><div class="card-val" style="color:var(--green)">$+5,563.20</div></div>
+      <div class="card"><div class="card-label">Avg P&amp;L</div><div class="card-val" style="color:var(--green)">$+222.53</div></div>
+      <div class="card"><div class="card-label">Largest Win</div><div class="card-val" style="color:var(--green)">$+10,094.80</div></div>
+      <div class="card"><div class="card-label">Largest Loss</div><div class="card-val" style="color:var(--red)">$-9,120.97</div></div>
+      <div class="card"><div class="card-label">Avg Win</div><div class="card-val" style="color:var(--green)">$+1,798.58</div></div>
+      <div class="card"><div class="card-label">Avg Loss</div><div class="card-val" style="color:var(--red)">$-2,579.34</div></div>
+      <div class="card"><div class="card-label">W / L</div><div class="card-val">16 / 9</div></div>
+      <div class="card"><div class="card-label">Streak</div><div class="card-val">3L</div></div>
+    </div>
+<div class="summary-box"><p>Across 25 trades, win rate is 64.0% with an expectancy of $+222.53 per trade. Total net P&L: $+5,563.20. Profit factor: 1.24. Best performing hour: Pre-market (avg $+346.05). Worst performing hour: 11:30-12:30 (avg $-2886.88). Last 10 trades: 40.0% win rate (below baseline). Current streak: 3L.</p></div>
+<div class="recs-box"><h3>Recommendations</h3><ul><li>Consistently losing in 09:30-10:30 (5 trades, $-740.59). Consider reducing size or avoiding this window.</li><li>Consistently losing in 11:30-12:30 (2 trades, $-5,773.77). Consider reducing size or avoiding this window.</li><li>Currently at max losing streak. Consider reducing position size until streak breaks.</li><li>Best day: Monday ($+1890.10 avg). Lean into this session.</li><li>Worst day: Wednesday ($-2447.56 avg). Consider sitting out or reducing size.</li></ul></div>
+
+<h2>1. Overall Statistics</h2>
+
+    <table>
+      <caption>Overall Statistics</caption>
+      <tr><th>Metric</th><th>Value</th></tr>
+      <tr><td>Total Trades</td><td>25</td></tr>
+      <tr><td>Winners / Losers / Breakeven</td><td>16 / 9 / 0</td></tr>
+      <tr><td>Win Rate</td><td style="color:var(--green)">64.0%</td></tr>
+      <tr><td>Total P&amp;L</td><td style="color:var(--green)">$+5,563.20</td></tr>
+      <tr><td>Average P&amp;L per Trade</td><td style="color:var(--green)">$+222.53</td></tr>
+      <tr><td>Average Win</td><td style="color:var(--green)">$+1,798.58</td></tr>
+      <tr><td>Average Loss</td><td style="color:var(--red)">$-2,579.34</td></tr>
+      <tr><td>Largest Win</td><td style="color:var(--green)">$+10,094.80</td></tr>
+      <tr><td>Largest Loss</td><td style="color:var(--red)">$-9,120.97</td></tr>
+      <tr><td>Expectancy</td><td style="color:var(--green)">$+222.53</td></tr>
+      <tr><td>Profit Factor</td><td>1.24</td></tr>
+      <tr><td>Max Win Streak</td><td>7</td></tr>
+      <tr><td>Max Loss Streak</td><td>3</td></tr>
+      <tr><td>Current Streak</td><td>3L</td></tr>
+    </table>
+
+<h2>2. Performance by Setup Type</h2>
+<!-- Tag trades with setup names in your journal for per-strategy breakdown -->
+
+    <table>
+      <caption>Performance by Setup Type</caption>
+      <tr><th>Setup</th><th>Trades</th><th>Win Rate</th><th>Avg Win</th><th>Avg Loss</th><th>Total P&amp;L</th><th>Expectancy</th></tr>
+      <tr><td>Unclassified</td><td>25</td><td style="color:var(--green)">64.0%</td><td style="color:var(--green)">$+1,798.58</td><td style="color:var(--red)">$-2,579.34</td><td style="color:var(--green)">$+5,563.20</td><td style="color:var(--green)">$+222.53</td></tr>
+    </table>
+
+<h2>3. Performance by Time of Day</h2>
+<!-- Hourly blocks aligned to US market hours -->
+
+    <table>
+      <caption>Performance by Time of Day</caption>
+      <tr><th>Time Block</th><th>Trades</th><th>Win Rate</th><th>Avg Win</th><th>Avg Loss</th><th>Total P&amp;L</th></tr>
+      <tr><td>09:30-10:30</td><td>5</td><td style="color:var(--green)">60.0%</td><td style="color:var(--green)">$+607.59</td><td style="color:var(--red)">$-1,281.67</td><td style="color:var(--red)">$-740.59</td></tr><tr><td>10:30-11:30</td><td class="muted">0</td><td class="muted">—</td><td class="muted">—</td><td class="muted">—</td><td class="muted">—</td></tr><tr><td>11:30-12:30</td><td>2</td><td style="color:var(--green)">50.0%</td><td style="color:var(--green)">$+3,347.20</td><td style="color:var(--red)">$-9,120.97</td><td style="color:var(--red)">$-5,773.77</td></tr><tr><td>12:30-13:30</td><td>1</td><td style="color:var(--green)">100.0%</td><td style="color:var(--green)">$+466.00</td><td style="color:var(--muted)">$+0.00</td><td style="color:var(--green)">$+466.00</td></tr><tr><td>13:30-14:30</td><td>1</td><td style="color:var(--green)">100.0%</td><td style="color:var(--green)">$+2,627.40</td><td style="color:var(--muted)">$+0.00</td><td style="color:var(--green)">$+2,627.40</td></tr><tr><td>14:30-15:30</td><td>1</td><td style="color:var(--green)">100.0%</td><td style="color:var(--green)">$+44.20</td><td style="color:var(--muted)">$+0.00</td><td style="color:var(--green)">$+44.20</td></tr><tr><td>15:30-16:00</td><td class="muted">0</td><td class="muted">—</td><td class="muted">—</td><td class="muted">—</td><td class="muted">—</td></tr><tr><td>Pre-market</td><td>14</td><td style="color:var(--green)">57.1%</td><td style="color:var(--green)">$+2,046.81</td><td style="color:var(--red)">$-1,921.62</td><td style="color:var(--green)">$+4,844.76</td></tr><tr><td>After-hours</td><td>1</td><td style="color:var(--green)">100.0%</td><td style="color:var(--green)">$+4,095.20</td><td style="color:var(--muted)">$+0.00</td><td style="color:var(--green)">$+4,095.20</td></tr>
+    </table>
+
+<h2>4. Performance by Day of Week</h2>
+
+    <table>
+      <caption>Performance by Day of Week</caption>
+      <tr><th>Day</th><th>Trades</th><th>Win Rate</th><th>Avg Win</th><th>Avg Loss</th><th>Total P&amp;L</th></tr>
+      <tr><td>Monday</td><td>7</td><td style="color:var(--green)">85.7%</td><td style="color:var(--green)">$+2,458.04</td><td style="color:var(--red)">$-1,517.56</td><td style="color:var(--green)">$+13,230.69</td></tr><tr><td>Tuesday</td><td>6</td><td style="color:var(--green)">66.7%</td><td style="color:var(--green)">$+1,128.86</td><td style="color:var(--red)">$-754.51</td><td style="color:var(--green)">$+3,006.43</td></tr><tr><td>Wednesday</td><td>6</td><td style="color:var(--red)">33.3%</td><td style="color:var(--green)">$+2,171.80</td><td style="color:var(--red)">$-4,757.24</td><td style="color:var(--red)">$-14,685.38</td></tr><tr><td>Thursday</td><td>3</td><td style="color:var(--red)">33.3%</td><td style="color:var(--green)">$+508.00</td><td style="color:var(--red)">$-579.25</td><td style="color:var(--red)">$-650.50</td></tr><tr><td>Friday</td><td>3</td><td style="color:var(--green)">100.0%</td><td style="color:var(--green)">$+1,553.99</td><td style="color:var(--muted)">$+0.00</td><td style="color:var(--green)">$+4,661.96</td></tr>
+    </table>
+
+<h2>5. Performance by Symbol</h2>
+
+    <table>
+      <caption>Performance by Symbol</caption>
+      <tr><th>Symbol</th><th>Trades</th><th>Win Rate</th><th>Avg P&amp;L</th><th>Total P&amp;L</th></tr>
+      <tr><td>MNQ</td><td>14</td><td style="color:var(--green)">71.4%</td><td style="color:var(--green)">$+290.93</td><td style="color:var(--green)">$+4,073.03</td></tr><tr><td>M2K</td><td>3</td><td style="color:var(--green)">66.7%</td><td style="color:var(--green)">$+872.39</td><td style="color:var(--green)">$+2,617.17</td></tr><tr><td>MES</td><td>4</td><td style="color:var(--green)">50.0%</td><td style="color:var(--green)">$+51.22</td><td style="color:var(--green)">$+204.88</td></tr><tr><td>MYM</td><td>4</td><td style="color:var(--green)">50.0%</td><td style="color:var(--red)">$-332.97</td><td style="color:var(--red)">$-1,331.88</td></tr>
+    </table>
+
+<h2>6. Long vs Short</h2>
+
+    <table>
+      <caption>Long vs Short</caption>
+      <tr><th>Side</th><th>Trades</th><th>Win Rate</th><th>Avg P&amp;L</th><th>Total P&amp;L</th></tr>
+      <tr><td>Long</td><td>10</td><td style="color:var(--green)">60.0%</td><td style="color:var(--red)">$-486.94</td><td style="color:var(--red)">$-4,869.39</td></tr>
+      <tr><td>Short</td><td>15</td><td style="color:var(--green)">66.7%</td><td style="color:var(--green)">$+695.51</td><td style="color:var(--green)">$+10,432.59</td></tr>
+    </table>
+
+<h2>7. Pattern Detection</h2>
+<!-- Automatically identifies best/worst hours, setups, and days -->
+<div class="pat-box"><h3>Pattern Detection</h3><ul><li class="g">Best hour: <strong>Pre-market</strong> — avg $+346.05</li><li class="r">Worst hour: <strong>11:30-12:30</strong> — avg $-2,886.88</li><li class="g">Best setup: <strong>Unclassified</strong> — avg $+222.53</li><li class="r">Worst setup: <strong>Unclassified</strong> — avg $+222.53</li><li class="g">Best day: <strong>Monday</strong> — avg $+1,890.10</li><li class="r">Worst day: <strong>Wednesday</strong> — avg $-2,447.56</li><li class="r">Losing block: <strong>09:30-10:30</strong> — 5 trades, $-740.59</li><li class="r">Losing block: <strong>11:30-12:30</strong> — 2 trades, $-5,773.77</li></ul></div>
+
+
+    <div class="section">
+      <h2>Weekly Review — Week 14 (2026-03-30 to 2026-04-03)</h2>
+      <div class="cards">
+        <div class="card"><div class="card-label">Week Trades</div><div class="card-val">0</div></div>
+        <div class="card"><div class="card-label">Week Win Rate</div><div class="card-val" style="color:var(--red)">0%</div></div>
+        <div class="card"><div class="card-label">Week P&amp;L</div><div class="card-val" style="color:var(--muted)">$+0.00</div></div>
+        <div class="card"><div class="card-label">Week Expectancy</div><div class="card-val" style="color:var(--muted)">$+0.00</div></div>
+      </div>
+    </div>
+
+<div class="footer">TradeLog Analytics Engine &mdash; auto-generated every 15 min during market hours</div>
+</body>
+</html>
