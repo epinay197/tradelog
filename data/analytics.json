@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-01 03:01 ET",
+  "generated_at": "2026-04-01 03:05 ET",
   "trade_count": 25,
   "overall": {
     "trades": 25,
@@ -423,5 +423,56 @@
     "Currently at max losing streak. Consider reducing position size until streak breaks.",
     "Best day: Monday ($+1890.10 avg). Lean into this session.",
     "Worst day: Wednesday ($-2447.56 avg). Consider sitting out or reducing size."
-  ]
+  ],
+  "weekly_review": {
+    "week_number": 14,
+    "date_range": "2026-03-30 to 2026-04-03",
+    "current_week": {
+      "trades": 0,
+      "winners": 0,
+      "losers": 0,
+      "breakeven": 0,
+      "win_rate": 0,
+      "total_pnl": 0,
+      "avg_pnl": 0,
+      "avg_win": 0,
+      "avg_loss": 0,
+      "largest_win": 0,
+      "largest_loss": 0,
+      "expectancy": 0,
+      "profit_factor": 0
+    },
+    "prior_week": {
+      "trades": 0,
+      "winners": 0,
+      "losers": 0,
+      "breakeven": 0,
+      "win_rate": 0,
+      "total_pnl": 0,
+      "avg_pnl": 0,
+      "avg_win": 0,
+      "avg_loss": 0,
+      "largest_win": 0,
+      "largest_loss": 0,
+      "expectancy": 0,
+      "profit_factor": 0
+    },
+    "four_week_avg": {
+      "trades": 14,
+      "winners": 8,
+      "losers": 6,
+      "breakeven": 0,
+      "win_rate": 57.1,
+      "total_pnl": 4844.76,
+      "avg_pnl": 346.05,
+      "avg_win": 2046.81,
+      "avg_loss": -1921.62,
+      "largest_win": 10094.8,
+      "largest_loss": -8214.89,
+      "expectancy": 346.05,
+      "profit_factor": 1.42
+    },
+    "daily_breakdown": [],
+    "delta_vs_prior": null
+  }
 }
