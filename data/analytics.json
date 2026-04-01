@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-01 03:06 ET",
+  "generated_at": "2026-04-01 03:19 ET",
   "trade_count": 25,
   "overall": {
     "trades": 25,
@@ -414,6 +414,424 @@
         -5773.77,
         2
       ]
+    ]
+  },
+  "duration": {
+    "has_data": false
+  },
+  "equity_curve": {
+    "curve": [
+      {
+        "date": "2024-02-02",
+        "time": "09:42",
+        "pnl": 208.26,
+        "cumulative": 208.26,
+        "symbol": "MNQH24",
+        "side": "Long",
+        "drawdown": 0.0
+      },
+      {
+        "date": "2024-02-05",
+        "time": "10:03",
+        "pnl": -1517.56,
+        "cumulative": -1309.3,
+        "symbol": "MNQH24",
+        "side": "Long",
+        "drawdown": 1517.56
+      },
+      {
+        "date": "2024-02-06",
+        "time": "09:42",
+        "pnl": -1045.79,
+        "cumulative": -2355.09,
+        "symbol": "MNQH24",
+        "side": "Short",
+        "drawdown": 2563.35
+      },
+      {
+        "date": "2026-02-19",
+        "time": "10:06",
+        "pnl": 508.0,
+        "cumulative": -1847.09,
+        "symbol": "MNQH26",
+        "side": "Short",
+        "drawdown": 2055.35
+      },
+      {
+        "date": "2026-02-20",
+        "time": "09:46",
+        "pnl": 1106.5,
+        "cumulative": -740.59,
+        "symbol": "MNQH26",
+        "side": "Short",
+        "drawdown": 948.85
+      },
+      {
+        "date": "2026-02-23",
+        "time": "14:38",
+        "pnl": 44.2,
+        "cumulative": -696.39,
+        "symbol": "MNQH26",
+        "side": "Short",
+        "drawdown": 904.65
+      },
+      {
+        "date": "2026-02-25",
+        "time": "16:35",
+        "pnl": 4095.2,
+        "cumulative": 3398.81,
+        "symbol": "MNQH26",
+        "side": "Short",
+        "drawdown": 0.0
+      },
+      {
+        "date": "2026-02-27",
+        "time": "12:08",
+        "pnl": 3347.2,
+        "cumulative": 6746.01,
+        "symbol": "MNQH26",
+        "side": "Short",
+        "drawdown": 0.0
+      },
+      {
+        "date": "2026-03-02",
+        "time": "12:59",
+        "pnl": 466.0,
+        "cumulative": 7212.01,
+        "symbol": "MNQH26",
+        "side": "Long",
+        "drawdown": 0.0
+      },
+      {
+        "date": "2026-03-03",
+        "time": "13:34",
+        "pnl": 2627.4,
+        "cumulative": 9839.41,
+        "symbol": "MNQH26",
+        "side": "Long",
+        "drawdown": 0.0
+      },
+      {
+        "date": "2026-03-04",
+        "time": "12:03",
+        "pnl": -9120.97,
+        "cumulative": 718.44,
+        "symbol": "MNQH26",
+        "side": "Long",
+        "drawdown": 9120.97
+      },
+      {
+        "date": "2026-03-09",
+        "time": "03:04",
+        "pnl": 10094.8,
+        "cumulative": 10813.24,
+        "symbol": "MNQH26",
+        "side": "Short",
+        "drawdown": 0.0
+      },
+      {
+        "date": "2026-03-09",
+        "time": "03:09",
+        "pnl": 545.58,
+        "cumulative": 11358.82,
+        "symbol": "MYMH26",
+        "side": "Long",
+        "drawdown": 0.0
+      },
+      {
+        "date": "2026-03-09",
+        "time": "03:17",
+        "pnl": 765.67,
+        "cumulative": 12124.49,
+        "symbol": "MESH26",
+        "side": "Short",
+        "drawdown": 0.0
+      },
+      {
+        "date": "2026-03-09",
+        "time": "03:34",
+        "pnl": 2832.0,
+        "cumulative": 14956.49,
+        "symbol": "M2KH26",
+        "side": "Long",
+        "drawdown": 0.0
+      },
+      {
+        "date": "2026-03-10",
+        "time": "08:41",
+        "pnl": 295.71,
+        "cumulative": 15252.2,
+        "symbol": "MESH26",
+        "side": "Short",
+        "drawdown": 0.0
+      },
+      {
+        "date": "2026-03-10",
+        "time": "08:42",
+        "pnl": 117.66,
+        "cumulative": 15369.86,
+        "symbol": "MYMH26",
+        "side": "Short",
+        "drawdown": 0.0
+      },
+      {
+        "date": "2026-03-10",
+        "time": "08:44",
+        "pnl": -463.23,
+        "cumulative": 14906.63,
+        "symbol": "M2KH26",
+        "side": "Short",
+        "drawdown": 463.23
+      },
+      {
+        "date": "2026-03-10",
+        "time": "08:55",
+        "pnl": 1474.68,
+        "cumulative": 16381.31,
+        "symbol": "MNQH26",
+        "side": "Short",
+        "drawdown": 0.0
+      },
+      {
+        "date": "2026-03-11",
+        "time": "08:49",
+        "pnl": -1422.62,
+        "cumulative": 14958.69,
+        "symbol": "MYMH26",
+        "side": "Short",
+        "drawdown": 1422.62
+      },
+      {
+        "date": "2026-03-11",
+        "time": "08:56",
+        "pnl": -270.5,
+        "cumulative": 14688.19,
+        "symbol": "MESH26",
+        "side": "Short",
+        "drawdown": 1693.12
+      },
+      {
+        "date": "2026-03-11",
+        "time": "09:01",
+        "pnl": 248.4,
+        "cumulative": 14936.59,
+        "symbol": "M2KH26",
+        "side": "Long",
+        "drawdown": 1444.72
+      },
+      {
+        "date": "2026-03-11",
+        "time": "09:29",
+        "pnl": -8214.89,
+        "cumulative": 6721.7,
+        "symbol": "MNQH26",
+        "side": "Short",
+        "drawdown": 9659.61
+      },
+      {
+        "date": "2026-03-12",
+        "time": "08:34",
+        "pnl": -572.5,
+        "cumulative": 6149.2,
+        "symbol": "MYMH26",
+        "side": "Long",
+        "drawdown": 10232.11
+      },
+      {
+        "date": "2026-03-12",
+        "time": "08:48",
+        "pnl": -586.0,
+        "cumulative": 5563.2,
+        "symbol": "MESH26",
+        "side": "Long",
+        "drawdown": 10818.11
+      }
+    ],
+    "max_drawdown": 10818.11,
+    "final_equity": 5563.2
+  },
+  "r_multiples": {
+    "has_data": true,
+    "one_r": 2579.34,
+    "avg_r": 0.09,
+    "best_r": 3.91,
+    "worst_r": -3.54,
+    "trades": [
+      {
+        "date": "2024-02-02",
+        "time": "09:42",
+        "symbol": "MNQH24",
+        "pnl": 208.26,
+        "r": 0.08
+      },
+      {
+        "date": "2024-02-05",
+        "time": "10:03",
+        "symbol": "MNQH24",
+        "pnl": -1517.56,
+        "r": -0.59
+      },
+      {
+        "date": "2024-02-06",
+        "time": "09:42",
+        "symbol": "MNQH24",
+        "pnl": -1045.79,
+        "r": -0.41
+      },
+      {
+        "date": "2026-02-19",
+        "time": "10:06",
+        "symbol": "MNQH26",
+        "pnl": 508.0,
+        "r": 0.2
+      },
+      {
+        "date": "2026-02-20",
+        "time": "09:46",
+        "symbol": "MNQH26",
+        "pnl": 1106.5,
+        "r": 0.43
+      },
+      {
+        "date": "2026-02-23",
+        "time": "14:38",
+        "symbol": "MNQH26",
+        "pnl": 44.2,
+        "r": 0.02
+      },
+      {
+        "date": "2026-02-25",
+        "time": "16:35",
+        "symbol": "MNQH26",
+        "pnl": 4095.2,
+        "r": 1.59
+      },
+      {
+        "date": "2026-02-27",
+        "time": "12:08",
+        "symbol": "MNQH26",
+        "pnl": 3347.2,
+        "r": 1.3
+      },
+      {
+        "date": "2026-03-02",
+        "time": "12:59",
+        "symbol": "MNQH26",
+        "pnl": 466.0,
+        "r": 0.18
+      },
+      {
+        "date": "2026-03-03",
+        "time": "13:34",
+        "symbol": "MNQH26",
+        "pnl": 2627.4,
+        "r": 1.02
+      },
+      {
+        "date": "2026-03-04",
+        "time": "12:03",
+        "symbol": "MNQH26",
+        "pnl": -9120.97,
+        "r": -3.54
+      },
+      {
+        "date": "2026-03-09",
+        "time": "03:04",
+        "symbol": "MNQH26",
+        "pnl": 10094.8,
+        "r": 3.91
+      },
+      {
+        "date": "2026-03-09",
+        "time": "03:09",
+        "symbol": "MYMH26",
+        "pnl": 545.58,
+        "r": 0.21
+      },
+      {
+        "date": "2026-03-09",
+        "time": "03:17",
+        "symbol": "MESH26",
+        "pnl": 765.67,
+        "r": 0.3
+      },
+      {
+        "date": "2026-03-09",
+        "time": "03:34",
+        "symbol": "M2KH26",
+        "pnl": 2832.0,
+        "r": 1.1
+      },
+      {
+        "date": "2026-03-10",
+        "time": "08:41",
+        "symbol": "MESH26",
+        "pnl": 295.71,
+        "r": 0.11
+      },
+      {
+        "date": "2026-03-10",
+        "time": "08:42",
+        "symbol": "MYMH26",
+        "pnl": 117.66,
+        "r": 0.05
+      },
+      {
+        "date": "2026-03-10",
+        "time": "08:44",
+        "symbol": "M2KH26",
+        "pnl": -463.23,
+        "r": -0.18
+      },
+      {
+        "date": "2026-03-10",
+        "time": "08:55",
+        "symbol": "MNQH26",
+        "pnl": 1474.68,
+        "r": 0.57
+      },
+      {
+        "date": "2026-03-11",
+        "time": "08:49",
+        "symbol": "MYMH26",
+        "pnl": -1422.62,
+        "r": -0.55
+      },
+      {
+        "date": "2026-03-11",
+        "time": "08:56",
+        "symbol": "MESH26",
+        "pnl": -270.5,
+        "r": -0.1
+      },
+      {
+        "date": "2026-03-11",
+        "time": "09:01",
+        "symbol": "M2KH26",
+        "pnl": 248.4,
+        "r": 0.1
+      },
+      {
+        "date": "2026-03-11",
+        "time": "09:29",
+        "symbol": "MNQH26",
+        "pnl": -8214.89,
+        "r": -3.18
+      },
+      {
+        "date": "2026-03-12",
+        "time": "08:34",
+        "symbol": "MYMH26",
+        "pnl": -572.5,
+        "r": -0.22
+      },
+      {
+        "date": "2026-03-12",
+        "time": "08:48",
+        "symbol": "MESH26",
+        "pnl": -586.0,
+        "r": -0.23
+      }
     ]
   },
   "summary": "Across 25 trades, win rate is 64.0% with an expectancy of $+222.53 per trade. Total net P&L: $+5,563.20. Profit factor: 1.24. Best performing hour: Pre-market (avg $+346.05). Worst performing hour: 11:30-12:30 (avg $-2886.88). Last 10 trades: 40.0% win rate (below baseline). Current streak: 3L.",
