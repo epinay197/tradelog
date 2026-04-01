@@ -10,7 +10,7 @@ Usage:
     python trade_analytics.py --local FILE # Use local trades.json
     python trade_analytics.py --json       # Print JSON to stdout, no push
 """
-import json, os, sys, argparse, datetime, base64, hashlib, re, smtplib
+import json, os, sys, argparse, datetime, base64, hashlib, re, smtplib, webbrowser, threading
 import urllib.request, urllib.error
 from collections import defaultdict
 from email.mime.text import MIMEText
@@ -943,6 +943,28 @@ def send_email(cfg, analytics, dashboard_url):
         log(f"Email failed: {e}")
         return False
 
+# ── Auto-open dashboard ────────────────────────────────────────────────────
+def open_dashboard(url, close_after=300):
+    """Open dashboard in browser, close the tab after close_after seconds."""
+    try:
+        import subprocess
+        # Open URL in default browser
+        proc = subprocess.Popen(
+            ["cmd", "/c", "start", "", url],
+            shell=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
+        log(f"Dashboard opened in browser (auto-close in {close_after // 60}m)")
+        # Schedule close after 5 minutes via a background PowerShell command
+        close_cmd = (
+            f'powershell -WindowStyle Hidden -Command "'
+            f'Start-Sleep -Seconds {close_after}; '
+            f"Get-Process | Where-Object {{$_.MainWindowTitle -like '*TradeLog Analytics*'}} | "
+            f'ForEach-Object {{ $_.CloseMainWindow() }}"'
+        )
+        subprocess.Popen(close_cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception as e:
+        log(f"Browser open failed: {e}")
+
 # ── Main ───────────────────────────────────────────────────────────────────
 def main():
     parser = argparse.ArgumentParser(description="TradeLog Analytics Engine")
@@ -1026,6 +1048,7 @@ def main():
             notify("TradeLog Analytics", f"{overall['trades']} trades | {overall['win_rate']}% WR | ${overall['total_pnl']:+,.2f}")
             dashboard_url = f"https://{cfg['gh_owner']}.github.io/{cfg['gh_repo']}/analytics.html"
             send_email(cfg, analytics, dashboard_url)
+            open_dashboard(dashboard_url)
         else:
             log(f"ERROR: push failed (json={'OK' if ok1 else 'FAIL'}, html={'OK' if ok2 else 'FAIL'})")
             notify("TradeLog Analytics ERROR", "Push failed — check analytics.log")
