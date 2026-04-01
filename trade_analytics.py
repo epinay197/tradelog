@@ -10,9 +10,11 @@ Usage:
     python trade_analytics.py --local FILE # Use local trades.json
     python trade_analytics.py --json       # Print JSON to stdout, no push
 """
-import json, os, sys, argparse, datetime, base64, hashlib, re
+import json, os, sys, argparse, datetime, base64, hashlib, re, smtplib
 import urllib.request, urllib.error
 from collections import defaultdict
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from zoneinfo import ZoneInfo
 
 SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
@@ -680,6 +682,99 @@ def push_file(cfg, path, content_str, message):
     resp, status = gh_request("PUT", path, cfg, body)
     return status in (200, 201)
 
+# ── Email notification ─────────────────────────────────────────────────────
+def send_email(cfg, analytics, dashboard_url):
+    """Send analytics summary email via Gmail SMTP."""
+    smtp_user = cfg.get("smtp_user", "")
+    smtp_pass = cfg.get("smtp_app_password", "")
+    email_to  = cfg.get("email_to", smtp_user)
+    if not smtp_user or not smtp_pass:
+        log("Email skipped: smtp_user / smtp_app_password not in config.json")
+        return False
+
+    o = analytics["overall"]
+    ts = analytics["generated_at"]
+    pnl_emoji = "+" if o["total_pnl"] >= 0 else ""
+
+    subject = f"TradeLog Analytics | {o['win_rate']}% WR | ${pnl_emoji}{o['total_pnl']:,.2f} | {ts}"
+
+    # Build plain-text body
+    lines = [
+        f"TradeLog Analytics — {ts}",
+        f"{'=' * 50}",
+        "",
+        "SUMMARY",
+        analytics["summary"],
+        "",
+        f"{'─' * 50}",
+        "OVERALL STATISTICS",
+        f"  Trades:       {o['trades']} ({o['winners']}W / {o['losers']}L)",
+        f"  Win Rate:     {o['win_rate']}%",
+        f"  Total P&L:    ${o['total_pnl']:+,.2f}",
+        f"  Avg P&L:      ${o['avg_pnl']:+,.2f}",
+        f"  Expectancy:   ${o['expectancy']:+,.2f}",
+        f"  Profit Factor:{o['profit_factor']:.2f}",
+        f"  Avg Win:      ${o['avg_win']:+,.2f}",
+        f"  Avg Loss:     ${o['avg_loss']:+,.2f}",
+        f"  Largest Win:  ${o['largest_win']:+,.2f}",
+        f"  Largest Loss: ${o['largest_loss']:+,.2f}",
+        f"  Streak:       {o['current_streak']}",
+        "",
+        f"{'─' * 50}",
+        "PERFORMANCE BY TIME OF DAY",
+    ]
+    for b in analytics["by_time_of_day"]:
+        if b["trades"] > 0:
+            lines.append(f"  {b['block']:>14s}  {b['trades']:>3d} trades  {b['win_rate']:>5.1f}% WR  ${b['total_pnl']:>+10,.2f}")
+
+    lines += ["", f"{'─' * 50}", "PERFORMANCE BY DAY OF WEEK"]
+    for d in analytics["by_day_of_week"]:
+        if d["trades"] > 0:
+            lines.append(f"  {d['day']:>12s}  {d['trades']:>3d} trades  {d['win_rate']:>5.1f}% WR  ${d['total_pnl']:>+10,.2f}")
+
+    lines += ["", f"{'─' * 50}", "PERFORMANCE BY SYMBOL"]
+    for s in analytics["by_symbol"]:
+        lines.append(f"  {s['symbol']:>8s}  {s['trades']:>3d} trades  {s['win_rate']:>5.1f}% WR  ${s['total_pnl']:>+10,.2f}")
+
+    lines += ["", f"{'─' * 50}", "LONG vs SHORT"]
+    for side in ["Long", "Short"]:
+        sd = analytics["by_side"][side]
+        if sd["trades"] > 0:
+            lines.append(f"  {side:>8s}  {sd['trades']:>3d} trades  {sd['win_rate']:>5.1f}% WR  ${sd['total_pnl']:>+10,.2f}")
+
+    lines += ["", f"{'─' * 50}", "RECOMMENDATIONS"]
+    for i, r in enumerate(analytics["recommendations"], 1):
+        lines.append(f"  {i}. {r}")
+
+    p = analytics["patterns"]
+    lines += ["", f"{'─' * 50}", "PATTERN DETECTION"]
+    if p["best_hour"]:  lines.append(f"  Best hour:  {p['best_hour'][0]} (avg ${p['best_hour'][1]:+,.2f})")
+    if p["worst_hour"]: lines.append(f"  Worst hour: {p['worst_hour'][0]} (avg ${p['worst_hour'][1]:+,.2f})")
+    if p["best_day"]:   lines.append(f"  Best day:   {p['best_day'][0]} (avg ${p['best_day'][1]:+,.2f})")
+    if p["worst_day"]:  lines.append(f"  Worst day:  {p['worst_day'][0]} (avg ${p['worst_day'][1]:+,.2f})")
+    for blk, pnl, cnt in p.get("losing_blocks", []):
+        lines.append(f"  ALERT: {blk} — {cnt} trades, ${pnl:+,.2f}")
+
+    lines += ["", f"{'─' * 50}", f"Full dashboard: {dashboard_url}", ""]
+
+    body = "\n".join(lines)
+
+    msg = MIMEMultipart("alternative")
+    msg["From"]    = smtp_user
+    msg["To"]      = email_to
+    msg["Subject"] = subject
+    msg.attach(MIMEText(body, "plain"))
+
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=15) as s:
+            s.login(smtp_user, smtp_pass)
+            s.sendmail(smtp_user, email_to, msg.as_string())
+        log(f"Email sent to {email_to}")
+        return True
+    except Exception as e:
+        log(f"Email failed: {e}")
+        return False
+
 # ── Main ───────────────────────────────────────────────────────────────────
 def main():
     parser = argparse.ArgumentParser(description="TradeLog Analytics Engine")
@@ -761,6 +856,8 @@ def main():
         if ok1 and ok2:
             log("SUCCESS: pushed analytics.json + analytics.html to GitHub")
             notify("TradeLog Analytics", f"{overall['trades']} trades | {overall['win_rate']}% WR | ${overall['total_pnl']:+,.2f}")
+            dashboard_url = f"https://{cfg['gh_owner']}.github.io/{cfg['gh_repo']}/analytics.html"
+            send_email(cfg, analytics, dashboard_url)
         else:
             log(f"ERROR: push failed (json={'OK' if ok1 else 'FAIL'}, html={'OK' if ok2 else 'FAIL'})")
             notify("TradeLog Analytics ERROR", "Push failed — check analytics.log")
