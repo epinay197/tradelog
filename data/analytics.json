@@ -1,73 +1,73 @@
 {
-  "generated_at": "2026-04-01 08:51 ET",
-  "trade_count": 25,
+  "generated_at": "2026-04-01 12:51 ET",
+  "trade_count": 37,
   "overall": {
-    "trades": 25,
-    "winners": 16,
-    "losers": 9,
+    "trades": 37,
+    "winners": 22,
+    "losers": 15,
     "breakeven": 0,
-    "win_rate": 64.0,
-    "total_pnl": 5563.2,
-    "avg_pnl": 222.53,
-    "avg_win": 1798.58,
-    "avg_loss": -2579.34,
+    "win_rate": 59.5,
+    "total_pnl": 2999.63,
+    "avg_pnl": 81.07,
+    "avg_win": 1489.23,
+    "avg_loss": -1984.22,
     "largest_win": 10094.8,
     "largest_loss": -9120.97,
-    "expectancy": 222.53,
-    "profit_factor": 1.24,
-    "max_win_streak": 7,
-    "max_loss_streak": 3,
+    "expectancy": 81.07,
+    "profit_factor": 1.1,
+    "max_win_streak": 6,
+    "max_loss_streak": 5,
     "current_streak": "3L"
   },
   "by_setup": [
     {
-      "trades": 25,
-      "winners": 16,
-      "losers": 9,
+      "trades": 37,
+      "winners": 22,
+      "losers": 15,
       "breakeven": 0,
-      "win_rate": 64.0,
-      "total_pnl": 5563.2,
-      "avg_pnl": 222.53,
-      "avg_win": 1798.58,
-      "avg_loss": -2579.34,
+      "win_rate": 59.5,
+      "total_pnl": 2999.63,
+      "avg_pnl": 81.07,
+      "avg_win": 1489.23,
+      "avg_loss": -1984.22,
       "largest_win": 10094.8,
       "largest_loss": -9120.97,
-      "expectancy": 222.53,
-      "profit_factor": 1.24,
+      "expectancy": 81.07,
+      "profit_factor": 1.1,
       "setup": "Unclassified"
     }
   ],
   "by_time_of_day": [
     {
-      "trades": 5,
-      "winners": 3,
-      "losers": 2,
+      "trades": 11,
+      "winners": 5,
+      "losers": 6,
       "breakeven": 0,
-      "win_rate": 60.0,
-      "total_pnl": -740.59,
-      "avg_pnl": -148.12,
-      "avg_win": 607.59,
-      "avg_loss": -1281.67,
+      "win_rate": 45.5,
+      "total_pnl": -3024.95,
+      "avg_pnl": -275.0,
+      "avg_win": 500.51,
+      "avg_loss": -921.25,
       "largest_win": 1106.5,
-      "largest_loss": -1517.56,
-      "expectancy": -148.12,
-      "profit_factor": 0.71,
+      "largest_loss": -1710.24,
+      "expectancy": -275.0,
+      "profit_factor": 0.45,
       "block": "09:30-10:30"
     },
     {
-      "trades": 0,
-      "winners": 0,
+      "trades": 1,
+      "winners": 1,
       "losers": 0,
       "breakeven": 0,
-      "win_rate": 0,
-      "total_pnl": 0,
-      "avg_pnl": 0,
-      "avg_win": 0,
+      "win_rate": 100.0,
+      "total_pnl": 648.2,
+      "avg_pnl": 648.2,
+      "avg_win": 648.2,
       "avg_loss": 0,
-      "largest_win": 0,
-      "largest_loss": 0,
-      "expectancy": 0,
-      "profit_factor": 0,
+      "largest_win": 648.2,
+      "largest_loss": 648.2,
+      "expectancy": 648.2,
+      "profit_factor": 999.99,
       "block": "10:30-11:30"
     },
     {
@@ -151,19 +151,19 @@
       "block": "15:30-16:00"
     },
     {
-      "trades": 14,
-      "winners": 8,
-      "losers": 6,
+      "trades": 19,
+      "winners": 11,
+      "losers": 8,
       "breakeven": 0,
-      "win_rate": 57.1,
-      "total_pnl": 4844.76,
-      "avg_pnl": 346.05,
-      "avg_win": 2046.81,
-      "avg_loss": -1921.62,
+      "win_rate": 57.9,
+      "total_pnl": 3917.35,
+      "avg_pnl": 206.18,
+      "avg_win": 1730.2,
+      "avg_loss": -1889.36,
       "largest_win": 10094.8,
       "largest_loss": -8214.89,
-      "expectancy": 346.05,
-      "profit_factor": 1.42,
+      "expectancy": 206.18,
+      "profit_factor": 1.26,
       "block": "Pre-market"
     },
     {
@@ -185,103 +185,87 @@
   ],
   "by_day_of_week": [
     {
-      "trades": 7,
+      "trades": 9,
       "winners": 6,
-      "losers": 1,
+      "losers": 3,
       "breakeven": 0,
-      "win_rate": 85.7,
-      "total_pnl": 13230.69,
-      "avg_pnl": 1890.1,
+      "win_rate": 66.7,
+      "total_pnl": 11502.85,
+      "avg_pnl": 1278.09,
       "avg_win": 2458.04,
-      "avg_loss": -1517.56,
+      "avg_loss": -1081.8,
       "largest_win": 10094.8,
-      "largest_loss": -1517.56,
-      "expectancy": 1890.1,
-      "profit_factor": 9.72,
+      "largest_loss": -1710.24,
+      "expectancy": 1278.09,
+      "profit_factor": 4.54,
       "day": "Monday"
     },
     {
-      "trades": 6,
-      "winners": 4,
-      "losers": 2,
+      "trades": 9,
+      "winners": 6,
+      "losers": 3,
       "breakeven": 0,
       "win_rate": 66.7,
-      "total_pnl": 3006.43,
-      "avg_pnl": 501.07,
-      "avg_win": 1128.86,
-      "avg_loss": -754.51,
+      "total_pnl": 3424.96,
+      "avg_pnl": 380.55,
+      "avg_win": 1018.93,
+      "avg_loss": -896.21,
       "largest_win": 2627.4,
-      "largest_loss": -1045.79,
-      "expectancy": 501.07,
-      "profit_factor": 2.99,
+      "largest_loss": -1179.6,
+      "expectancy": 380.55,
+      "profit_factor": 2.27,
       "day": "Tuesday"
     },
     {
-      "trades": 6,
-      "winners": 2,
-      "losers": 4,
+      "trades": 8,
+      "winners": 3,
+      "losers": 5,
       "breakeven": 0,
-      "win_rate": 33.3,
-      "total_pnl": -14685.38,
-      "avg_pnl": -2447.56,
-      "avg_win": 2171.8,
-      "avg_loss": -4757.24,
+      "win_rate": 37.5,
+      "total_pnl": -13836.26,
+      "avg_pnl": -1729.53,
+      "avg_win": 1749.82,
+      "avg_loss": -3817.14,
       "largest_win": 4095.2,
       "largest_loss": -9120.97,
-      "expectancy": -2447.56,
-      "profit_factor": 0.23,
+      "expectancy": -1729.53,
+      "profit_factor": 0.28,
       "day": "Wednesday"
     },
     {
-      "trades": 3,
-      "winners": 1,
-      "losers": 2,
+      "trades": 6,
+      "winners": 3,
+      "losers": 3,
       "breakeven": 0,
-      "win_rate": 33.3,
-      "total_pnl": -650.5,
-      "avg_pnl": -216.83,
-      "avg_win": 508.0,
-      "avg_loss": -579.25,
-      "largest_win": 508.0,
-      "largest_loss": -586.0,
-      "expectancy": -216.83,
-      "profit_factor": 0.44,
+      "win_rate": 50.0,
+      "total_pnl": -321.97,
+      "avg_pnl": -53.66,
+      "avg_win": 634.51,
+      "avg_loss": -741.83,
+      "largest_win": 747.33,
+      "largest_loss": -1067.0,
+      "expectancy": -53.66,
+      "profit_factor": 0.86,
       "day": "Thursday"
     },
     {
-      "trades": 3,
-      "winners": 3,
-      "losers": 0,
+      "trades": 5,
+      "winners": 4,
+      "losers": 1,
       "breakeven": 0,
-      "win_rate": 100.0,
-      "total_pnl": 4661.96,
-      "avg_pnl": 1553.99,
-      "avg_win": 1553.99,
-      "avg_loss": 0,
+      "win_rate": 80.0,
+      "total_pnl": 2230.05,
+      "avg_pnl": 446.01,
+      "avg_win": 1187.04,
+      "avg_loss": -2518.12,
       "largest_win": 3347.2,
-      "largest_loss": 208.26,
-      "expectancy": 1553.99,
-      "profit_factor": 999.99,
+      "largest_loss": -2518.12,
+      "expectancy": 446.01,
+      "profit_factor": 1.89,
       "day": "Friday"
     }
   ],
   "by_symbol": [
-    {
-      "trades": 14,
-      "winners": 10,
-      "losers": 4,
-      "breakeven": 0,
-      "win_rate": 71.4,
-      "total_pnl": 4073.03,
-      "avg_pnl": 290.93,
-      "avg_win": 2397.22,
-      "avg_loss": -4974.8,
-      "largest_win": 10094.8,
-      "largest_loss": -9120.97,
-      "expectancy": 290.93,
-      "profit_factor": 1.2,
-      "symbol": "MNQ"
-    },
     {
       "trades": 3,
       "winners": 2,
@@ -297,6 +281,22 @@
       "expectancy": 872.39,
       "profit_factor": 6.65,
       "symbol": "M2K"
+    },
+    {
+      "trades": 26,
+      "winners": 16,
+      "losers": 10,
+      "breakeven": 0,
+      "win_rate": 61.5,
+      "total_pnl": 1509.46,
+      "avg_pnl": 58.06,
+      "avg_win": 1747.37,
+      "avg_loss": -2644.85,
+      "largest_win": 10094.8,
+      "largest_loss": -9120.97,
+      "expectancy": 58.06,
+      "profit_factor": 1.06,
+      "symbol": "MNQ"
     },
     {
       "trades": 4,
@@ -333,40 +333,40 @@
   ],
   "by_side": {
     "Long": {
-      "trades": 10,
-      "winners": 6,
-      "losers": 4,
+      "trades": 16,
+      "winners": 9,
+      "losers": 7,
       "breakeven": 0,
-      "win_rate": 60.0,
-      "total_pnl": -4869.39,
-      "avg_pnl": -486.94,
-      "avg_win": 1154.61,
-      "avg_loss": -2949.26,
+      "win_rate": 56.2,
+      "total_pnl": -7075.53,
+      "avg_pnl": -442.22,
+      "avg_win": 1054.02,
+      "avg_loss": -2365.96,
       "largest_win": 2832.0,
       "largest_loss": -9120.97,
-      "expectancy": -486.94,
-      "profit_factor": 0.59
+      "expectancy": -442.22,
+      "profit_factor": 0.57
     },
     "Short": {
-      "trades": 15,
-      "winners": 10,
-      "losers": 5,
+      "trades": 21,
+      "winners": 13,
+      "losers": 8,
       "breakeven": 0,
-      "win_rate": 66.7,
-      "total_pnl": 10432.59,
-      "avg_pnl": 695.51,
-      "avg_win": 2184.96,
-      "avg_loss": -2283.41,
+      "win_rate": 61.9,
+      "total_pnl": 10075.16,
+      "avg_pnl": 479.77,
+      "avg_win": 1790.52,
+      "avg_loss": -1650.2,
       "largest_win": 10094.8,
       "largest_loss": -8214.89,
-      "expectancy": 695.51,
-      "profit_factor": 1.91
+      "expectancy": 479.77,
+      "profit_factor": 1.76
     }
   },
   "patterns": {
     "best_hour": [
       "Pre-market",
-      346.05
+      206.18
     ],
     "worst_hour": [
       "11:30-12:30",
@@ -374,19 +374,19 @@
     ],
     "best_setup": [
       "Unclassified",
-      222.53
+      81.07
     ],
     "worst_setup": [
       "Unclassified",
-      222.53
+      81.07
     ],
     "best_day": [
       "Monday",
-      1890.1
+      1278.09
     ],
     "worst_day": [
       "Wednesday",
-      -2447.56
+      -1729.53
     ],
     "recent_10": {
       "trades": 10,
@@ -406,8 +406,8 @@
     "losing_blocks": [
       [
         "09:30-10:30",
-        -740.59,
-        5
+        -3024.95,
+        11
       ],
       [
         "11:30-12:30",
@@ -431,73 +431,154 @@
         "drawdown": 0.0
       },
       {
+        "date": "2024-02-02",
+        "time": "09:44",
+        "pnl": 86.21,
+        "cumulative": 294.47,
+        "symbol": "MNQH24",
+        "side": "Short",
+        "drawdown": 0.0
+      },
+      {
         "date": "2024-02-05",
         "time": "10:03",
         "pnl": -1517.56,
-        "cumulative": -1309.3,
+        "cumulative": -1223.09,
         "symbol": "MNQH24",
         "side": "Long",
         "drawdown": 1517.56
       },
       {
+        "date": "2024-02-05",
+        "time": "10:03",
+        "pnl": -1710.24,
+        "cumulative": -2933.33,
+        "symbol": "MNQH24",
+        "side": "Short",
+        "drawdown": 3227.8
+      },
+      {
         "date": "2024-02-06",
         "time": "09:42",
         "pnl": -1045.79,
-        "cumulative": -2355.09,
+        "cumulative": -3979.12,
         "symbol": "MNQH24",
         "side": "Short",
-        "drawdown": 2563.35
+        "drawdown": 4273.59
+      },
+      {
+        "date": "2024-02-06",
+        "time": "09:42",
+        "pnl": -1179.6,
+        "cumulative": -5158.72,
+        "symbol": "MNQH24",
+        "side": "Long",
+        "drawdown": 5453.19
+      },
+      {
+        "date": "2025-01-02",
+        "time": "06:46",
+        "pnl": -1067.0,
+        "cumulative": -6225.72,
+        "symbol": "MNQH25",
+        "side": "Long",
+        "drawdown": 6520.19
       },
       {
         "date": "2026-02-19",
         "time": "10:06",
         "pnl": 508.0,
-        "cumulative": -1847.09,
+        "cumulative": -5717.72,
         "symbol": "MNQH26",
         "side": "Short",
-        "drawdown": 2055.35
+        "drawdown": 6012.19
       },
       {
         "date": "2026-02-20",
         "time": "09:46",
         "pnl": 1106.5,
-        "cumulative": -740.59,
+        "cumulative": -4611.22,
         "symbol": "MNQH26",
         "side": "Short",
-        "drawdown": 948.85
+        "drawdown": 4905.69
       },
       {
         "date": "2026-02-23",
         "time": "14:38",
         "pnl": 44.2,
-        "cumulative": -696.39,
+        "cumulative": -4567.02,
         "symbol": "MNQH26",
         "side": "Short",
-        "drawdown": 904.65
+        "drawdown": 4861.49
+      },
+      {
+        "date": "2026-02-24",
+        "time": "09:45",
+        "pnl": 593.6,
+        "cumulative": -3973.42,
+        "symbol": "MNQH26",
+        "side": "Short",
+        "drawdown": 4267.89
+      },
+      {
+        "date": "2026-02-25",
+        "time": "09:57",
+        "pnl": -56.73,
+        "cumulative": -4030.15,
+        "symbol": "MNQH26",
+        "side": "Short",
+        "drawdown": 4324.62
       },
       {
         "date": "2026-02-25",
         "time": "16:35",
         "pnl": 4095.2,
-        "cumulative": 3398.81,
+        "cumulative": 65.05,
         "symbol": "MNQH26",
         "side": "Short",
+        "drawdown": 229.42
+      },
+      {
+        "date": "2026-02-26",
+        "time": "10:35",
+        "pnl": 648.2,
+        "cumulative": 713.25,
+        "symbol": "MNQH26",
+        "side": "Long",
         "drawdown": 0.0
       },
       {
         "date": "2026-02-27",
         "time": "12:08",
         "pnl": 3347.2,
-        "cumulative": 6746.01,
+        "cumulative": 4060.45,
         "symbol": "MNQH26",
         "side": "Short",
         "drawdown": 0.0
       },
       {
         "date": "2026-03-02",
+        "time": "09:35",
+        "pnl": -17.6,
+        "cumulative": 4042.85,
+        "symbol": "MNQH26",
+        "side": "Short",
+        "drawdown": 17.6
+      },
+      {
+        "date": "2026-03-02",
         "time": "12:59",
         "pnl": 466.0,
-        "cumulative": 7212.01,
+        "cumulative": 4508.85,
+        "symbol": "MNQH26",
+        "side": "Long",
+        "drawdown": 0.0
+      },
+      {
+        "date": "2026-03-03",
+        "time": "03:33",
+        "pnl": 1004.53,
+        "cumulative": 5513.38,
         "symbol": "MNQH26",
         "side": "Long",
         "drawdown": 0.0
@@ -506,7 +587,16 @@
         "date": "2026-03-03",
         "time": "13:34",
         "pnl": 2627.4,
-        "cumulative": 9839.41,
+        "cumulative": 8140.78,
+        "symbol": "MNQH26",
+        "side": "Long",
+        "drawdown": 0.0
+      },
+      {
+        "date": "2026-03-04",
+        "time": "02:27",
+        "pnl": 905.85,
+        "cumulative": 9046.63,
         "symbol": "MNQH26",
         "side": "Long",
         "drawdown": 0.0
@@ -515,34 +605,52 @@
         "date": "2026-03-04",
         "time": "12:03",
         "pnl": -9120.97,
-        "cumulative": 718.44,
+        "cumulative": -74.34,
         "symbol": "MNQH26",
         "side": "Long",
         "drawdown": 9120.97
       },
       {
+        "date": "2026-03-05",
+        "time": "02:35",
+        "pnl": 747.33,
+        "cumulative": 672.99,
+        "symbol": "MNQH26",
+        "side": "Short",
+        "drawdown": 8373.64
+      },
+      {
+        "date": "2026-03-06",
+        "time": "03:47",
+        "pnl": -2518.12,
+        "cumulative": -1845.13,
+        "symbol": "MNQH26",
+        "side": "Long",
+        "drawdown": 10891.76
+      },
+      {
         "date": "2026-03-09",
         "time": "03:04",
         "pnl": 10094.8,
-        "cumulative": 10813.24,
+        "cumulative": 8249.67,
         "symbol": "MNQH26",
         "side": "Short",
-        "drawdown": 0.0
+        "drawdown": 796.96
       },
       {
         "date": "2026-03-09",
         "time": "03:09",
         "pnl": 545.58,
-        "cumulative": 11358.82,
+        "cumulative": 8795.25,
         "symbol": "MYMH26",
         "side": "Long",
-        "drawdown": 0.0
+        "drawdown": 251.38
       },
       {
         "date": "2026-03-09",
         "time": "03:17",
         "pnl": 765.67,
-        "cumulative": 12124.49,
+        "cumulative": 9560.92,
         "symbol": "MESH26",
         "side": "Short",
         "drawdown": 0.0
@@ -551,7 +659,7 @@
         "date": "2026-03-09",
         "time": "03:34",
         "pnl": 2832.0,
-        "cumulative": 14956.49,
+        "cumulative": 12392.92,
         "symbol": "M2KH26",
         "side": "Long",
         "drawdown": 0.0
@@ -560,7 +668,7 @@
         "date": "2026-03-10",
         "time": "08:41",
         "pnl": 295.71,
-        "cumulative": 15252.2,
+        "cumulative": 12688.63,
         "symbol": "MESH26",
         "side": "Short",
         "drawdown": 0.0
@@ -569,7 +677,7 @@
         "date": "2026-03-10",
         "time": "08:42",
         "pnl": 117.66,
-        "cumulative": 15369.86,
+        "cumulative": 12806.29,
         "symbol": "MYMH26",
         "side": "Short",
         "drawdown": 0.0
@@ -578,7 +686,7 @@
         "date": "2026-03-10",
         "time": "08:44",
         "pnl": -463.23,
-        "cumulative": 14906.63,
+        "cumulative": 12343.06,
         "symbol": "M2KH26",
         "side": "Short",
         "drawdown": 463.23
@@ -587,7 +695,7 @@
         "date": "2026-03-10",
         "time": "08:55",
         "pnl": 1474.68,
-        "cumulative": 16381.31,
+        "cumulative": 13817.74,
         "symbol": "MNQH26",
         "side": "Short",
         "drawdown": 0.0
@@ -596,7 +704,7 @@
         "date": "2026-03-11",
         "time": "08:49",
         "pnl": -1422.62,
-        "cumulative": 14958.69,
+        "cumulative": 12395.12,
         "symbol": "MYMH26",
         "side": "Short",
         "drawdown": 1422.62
@@ -605,7 +713,7 @@
         "date": "2026-03-11",
         "time": "08:56",
         "pnl": -270.5,
-        "cumulative": 14688.19,
+        "cumulative": 12124.62,
         "symbol": "MESH26",
         "side": "Short",
         "drawdown": 1693.12
@@ -614,7 +722,7 @@
         "date": "2026-03-11",
         "time": "09:01",
         "pnl": 248.4,
-        "cumulative": 14936.59,
+        "cumulative": 12373.02,
         "symbol": "M2KH26",
         "side": "Long",
         "drawdown": 1444.72
@@ -623,7 +731,7 @@
         "date": "2026-03-11",
         "time": "09:29",
         "pnl": -8214.89,
-        "cumulative": 6721.7,
+        "cumulative": 4158.13,
         "symbol": "MNQH26",
         "side": "Short",
         "drawdown": 9659.61
@@ -632,7 +740,7 @@
         "date": "2026-03-12",
         "time": "08:34",
         "pnl": -572.5,
-        "cumulative": 6149.2,
+        "cumulative": 3585.63,
         "symbol": "MYMH26",
         "side": "Long",
         "drawdown": 10232.11
@@ -641,56 +749,84 @@
         "date": "2026-03-12",
         "time": "08:48",
         "pnl": -586.0,
-        "cumulative": 5563.2,
+        "cumulative": 2999.63,
         "symbol": "MESH26",
         "side": "Long",
         "drawdown": 10818.11
       }
     ],
-    "max_drawdown": 10818.11,
-    "final_equity": 5563.2
+    "max_drawdown": 10891.76,
+    "final_equity": 2999.63
   },
   "r_multiples": {
     "has_data": true,
-    "one_r": 2579.34,
-    "avg_r": 0.09,
-    "best_r": 3.91,
-    "worst_r": -3.54,
+    "one_r": 1984.22,
+    "avg_r": 0.04,
+    "best_r": 5.09,
+    "worst_r": -4.6,
     "trades": [
       {
         "date": "2024-02-02",
         "time": "09:42",
         "symbol": "MNQH24",
         "pnl": 208.26,
-        "r": 0.08
+        "r": 0.1
+      },
+      {
+        "date": "2024-02-02",
+        "time": "09:44",
+        "symbol": "MNQH24",
+        "pnl": 86.21,
+        "r": 0.04
       },
       {
         "date": "2024-02-05",
         "time": "10:03",
         "symbol": "MNQH24",
         "pnl": -1517.56,
-        "r": -0.59
+        "r": -0.76
+      },
+      {
+        "date": "2024-02-05",
+        "time": "10:03",
+        "symbol": "MNQH24",
+        "pnl": -1710.24,
+        "r": -0.86
       },
       {
         "date": "2024-02-06",
         "time": "09:42",
         "symbol": "MNQH24",
         "pnl": -1045.79,
-        "r": -0.41
+        "r": -0.53
+      },
+      {
+        "date": "2024-02-06",
+        "time": "09:42",
+        "symbol": "MNQH24",
+        "pnl": -1179.6,
+        "r": -0.59
+      },
+      {
+        "date": "2025-01-02",
+        "time": "06:46",
+        "symbol": "MNQH25",
+        "pnl": -1067.0,
+        "r": -0.54
       },
       {
         "date": "2026-02-19",
         "time": "10:06",
         "symbol": "MNQH26",
         "pnl": 508.0,
-        "r": 0.2
+        "r": 0.26
       },
       {
         "date": "2026-02-20",
         "time": "09:46",
         "symbol": "MNQH26",
         "pnl": 1106.5,
-        "r": 0.43
+        "r": 0.56
       },
       {
         "date": "2026-02-23",
@@ -700,146 +836,201 @@
         "r": 0.02
       },
       {
+        "date": "2026-02-24",
+        "time": "09:45",
+        "symbol": "MNQH26",
+        "pnl": 593.6,
+        "r": 0.3
+      },
+      {
+        "date": "2026-02-25",
+        "time": "09:57",
+        "symbol": "MNQH26",
+        "pnl": -56.73,
+        "r": -0.03
+      },
+      {
         "date": "2026-02-25",
         "time": "16:35",
         "symbol": "MNQH26",
         "pnl": 4095.2,
-        "r": 1.59
+        "r": 2.06
+      },
+      {
+        "date": "2026-02-26",
+        "time": "10:35",
+        "symbol": "MNQH26",
+        "pnl": 648.2,
+        "r": 0.33
       },
       {
         "date": "2026-02-27",
         "time": "12:08",
         "symbol": "MNQH26",
         "pnl": 3347.2,
-        "r": 1.3
+        "r": 1.69
+      },
+      {
+        "date": "2026-03-02",
+        "time": "09:35",
+        "symbol": "MNQH26",
+        "pnl": -17.6,
+        "r": -0.01
       },
       {
         "date": "2026-03-02",
         "time": "12:59",
         "symbol": "MNQH26",
         "pnl": 466.0,
-        "r": 0.18
+        "r": 0.23
+      },
+      {
+        "date": "2026-03-03",
+        "time": "03:33",
+        "symbol": "MNQH26",
+        "pnl": 1004.53,
+        "r": 0.51
       },
       {
         "date": "2026-03-03",
         "time": "13:34",
         "symbol": "MNQH26",
         "pnl": 2627.4,
-        "r": 1.02
+        "r": 1.32
+      },
+      {
+        "date": "2026-03-04",
+        "time": "02:27",
+        "symbol": "MNQH26",
+        "pnl": 905.85,
+        "r": 0.46
       },
       {
         "date": "2026-03-04",
         "time": "12:03",
         "symbol": "MNQH26",
         "pnl": -9120.97,
-        "r": -3.54
+        "r": -4.6
+      },
+      {
+        "date": "2026-03-05",
+        "time": "02:35",
+        "symbol": "MNQH26",
+        "pnl": 747.33,
+        "r": 0.38
+      },
+      {
+        "date": "2026-03-06",
+        "time": "03:47",
+        "symbol": "MNQH26",
+        "pnl": -2518.12,
+        "r": -1.27
       },
       {
         "date": "2026-03-09",
         "time": "03:04",
         "symbol": "MNQH26",
         "pnl": 10094.8,
-        "r": 3.91
+        "r": 5.09
       },
       {
         "date": "2026-03-09",
         "time": "03:09",
         "symbol": "MYMH26",
         "pnl": 545.58,
-        "r": 0.21
+        "r": 0.27
       },
       {
         "date": "2026-03-09",
         "time": "03:17",
         "symbol": "MESH26",
         "pnl": 765.67,
-        "r": 0.3
+        "r": 0.39
       },
       {
         "date": "2026-03-09",
         "time": "03:34",
         "symbol": "M2KH26",
         "pnl": 2832.0,
-        "r": 1.1
+        "r": 1.43
       },
       {
         "date": "2026-03-10",
         "time": "08:41",
         "symbol": "MESH26",
         "pnl": 295.71,
-        "r": 0.11
+        "r": 0.15
       },
       {
         "date": "2026-03-10",
         "time": "08:42",
         "symbol": "MYMH26",
         "pnl": 117.66,
-        "r": 0.05
+        "r": 0.06
       },
       {
         "date": "2026-03-10",
         "time": "08:44",
         "symbol": "M2KH26",
         "pnl": -463.23,
-        "r": -0.18
+        "r": -0.23
       },
       {
         "date": "2026-03-10",
         "time": "08:55",
         "symbol": "MNQH26",
         "pnl": 1474.68,
-        "r": 0.57
+        "r": 0.74
       },
       {
         "date": "2026-03-11",
         "time": "08:49",
         "symbol": "MYMH26",
         "pnl": -1422.62,
-        "r": -0.55
+        "r": -0.72
       },
       {
         "date": "2026-03-11",
         "time": "08:56",
         "symbol": "MESH26",
         "pnl": -270.5,
-        "r": -0.1
+        "r": -0.14
       },
       {
         "date": "2026-03-11",
         "time": "09:01",
         "symbol": "M2KH26",
         "pnl": 248.4,
-        "r": 0.1
+        "r": 0.13
       },
       {
         "date": "2026-03-11",
         "time": "09:29",
         "symbol": "MNQH26",
         "pnl": -8214.89,
-        "r": -3.18
+        "r": -4.14
       },
       {
         "date": "2026-03-12",
         "time": "08:34",
         "symbol": "MYMH26",
         "pnl": -572.5,
-        "r": -0.22
+        "r": -0.29
       },
       {
         "date": "2026-03-12",
         "time": "08:48",
         "symbol": "MESH26",
         "pnl": -586.0,
-        "r": -0.23
+        "r": -0.3
       }
     ]
   },
-  "summary": "Across 25 trades, win rate is 64.0% with an expectancy of $+222.53 per trade. Total net P&L: $+5,563.20. Profit factor: 1.24. Best performing hour: Pre-market (avg $+346.05). Worst performing hour: 11:30-12:30 (avg $-2886.88). Last 10 trades: 40.0% win rate (below baseline). Current streak: 3L.",
+  "summary": "Across 37 trades, win rate is 59.5% with an expectancy of $+81.07 per trade. Total net P&L: $+2,999.63. Profit factor: 1.10. Best performing hour: Pre-market (avg $+206.18). Worst performing hour: 11:30-12:30 (avg $-2886.88). Last 10 trades: 40.0% win rate (below baseline). Current streak: 3L.",
   "recommendations": [
-    "Consistently losing in 09:30-10:30 (5 trades, $-740.59). Consider reducing size or avoiding this window.",
+    "Consistently losing in 09:30-10:30 (11 trades, $-3,024.95). Consider reducing size or avoiding this window.",
     "Consistently losing in 11:30-12:30 (2 trades, $-5,773.77). Consider reducing size or avoiding this window.",
-    "Currently at max losing streak. Consider reducing position size until streak breaks.",
-    "Best day: Monday ($+1890.10 avg). Lean into this session.",
-    "Worst day: Wednesday ($-2447.56 avg). Consider sitting out or reducing size."
+    "Best day: Monday ($+1278.09 avg). Lean into this session.",
+    "Worst day: Wednesday ($-1729.53 avg). Consider sitting out or reducing size."
   ]
 }
