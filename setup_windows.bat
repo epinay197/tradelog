@@ -70,33 +70,36 @@ echo [OK] GitHub connected.
 
 :: First sync
 echo [*] Running first sync...
-python "%SCRIPT_DIR%sc_auto_bridge.py"
+python "%SCRIPT_DIR%sc_auto_bridge.py" --force
 
-:: Remove old single-trigger task if present
+:: Remove any old tasks
 schtasks /delete /tn "TradeLog Auto-Sync" /f >/dev/null 2>&1
+schtasks /delete /tn "TradeLog Midday-Sync" /f >/dev/null 2>&1
+schtasks /delete /tn "TradeLog Close-Sync" /f >/dev/null 2>&1
+schtasks /delete /tn "TradeLog Hourly-Sync" /f >/dev/null 2>&1
 
-:: Register dual-schedule: Midday (12:00 PM ET) and Close (4:00 PM ET)
-echo [*] Registering Task Scheduler (weekdays at 12:00 PM + 4:00 PM ET)...
-
-schtasks /create /tn "TradeLog Midday-Sync" /tr "python \"%SCRIPT_DIR%sc_auto_bridge.py\"" /sc weekly /d MON,TUE,WED,THU,FRI /st 12:00 /rl highest /f >/dev/null
+:: Register hourly task via PowerShell (supports repetition interval)
+echo [*] Registering hourly Task Scheduler (06:00-23:00, ET gated in Python)...
+powershell -Command "$xml = @'
+<?xml version=\"1.0\" encoding=\"UTF-16\"?>
+<Task version=\"1.3\" xmlns=\"http://schemas.microsoft.com/windows/2004/02/mit/task\">
+  <Triggers><CalendarTrigger><Repetition><Interval>PT1H</Interval><Duration>PT17H</Duration><StopAtDurationEnd>false</StopAtDurationEnd></Repetition><StartBoundary>2026-01-01T06:00:00</StartBoundary><Enabled>true</Enabled><ScheduleByDay><DaysInterval>1</DaysInterval></ScheduleByDay></CalendarTrigger></Triggers>
+  <Principals><Principal id=\"Author\"><RunLevel>HighestAvailable</RunLevel></Principal></Principals>
+  <Settings><DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries><StopIfGoingOnBatteries>false</StopIfGoingOnBatteries><StartWhenAvailable>true</StartWhenAvailable><ExecutionTimeLimit>PT1H</ExecutionTimeLimit></Settings>
+  <Actions Context=\"Author\"><Exec><Command>python</Command><Arguments>\"%SCRIPT_DIR%sc_auto_bridge.py\"</Arguments></Exec></Actions>
+</Task>
+'@; Register-ScheduledTask -TaskName 'TradeLog Hourly-Sync' -Xml $xml -Force"
 if %errorlevel% equ 0 (
-    echo [OK] Midday sync scheduled: weekdays at 12:00 PM ET
+    echo [OK] Hourly sync scheduled: every hour 06:00-23:00, ET market-hours gated
 ) else (
-    echo [WARN] Could not register midday task. Run as Administrator.
-)
-
-schtasks /create /tn "TradeLog Close-Sync" /tr "python \"%SCRIPT_DIR%sc_auto_bridge.py\"" /sc weekly /d MON,TUE,WED,THU,FRI /st 16:00 /rl highest /f >/dev/null
-if %errorlevel% equ 0 (
-    echo [OK] Close sync scheduled: weekdays at 4:00 PM ET
-) else (
-    echo [WARN] Could not register close task. Run as Administrator.
+    echo [WARN] Could not register task. Run as Administrator.
 )
 
 echo.
 echo  ========================================
 echo   Setup complete!
 echo   Journal: https://!GH_OWNER!.github.io/!GH_REPO!/
-echo   Syncs automatically weekdays at 12:00 PM + 4:00 PM ET
+echo   Auto-sync: hourly during ET market hours (Mon-Fri 8AM-4PM)
 echo  ========================================
 echo.
 pause

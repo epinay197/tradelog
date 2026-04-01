@@ -2,7 +2,8 @@
 sc_auto_bridge.py v2 — Sierra Chart TradeActivityLogs → GitHub
 Parses SC binary TradeActivityLog_*.data files, pairs FIFO round-trips, pushes trades.json
 """
-import json, os, struct, glob, re, base64, hashlib, datetime, sys
+import json, os, struct, glob, re, base64, hashlib, datetime, sys, argparse
+from zoneinfo import ZoneInfo
 import urllib.request, urllib.error
 from collections import defaultdict
 
@@ -23,6 +24,14 @@ def notify(title, msg):
         ToastNotifier().show_toast(title, msg, duration=6, threaded=True)
     except Exception:
         pass
+
+# ── Market-hours gate ──────────────────────────────────────
+def in_market_window():
+    """True if current ET time is 08:00-16:00 on a weekday."""
+    now_et = datetime.datetime.now(ZoneInfo("America/New_York"))
+    if now_et.weekday() >= 5:
+        return False
+    return 8 <= now_et.hour < 16
 
 # ── Config ─────────────────────────────────────────────────────────────────
 def load_config():
@@ -65,11 +74,11 @@ def meta(base):
 _SC_EPOCH_OFFSET_US = (25567 + 2) * 86400 * 1_000_000  # Dec-30-1899 to Jan-1-1970 in us
 
 def sc_ts_to_et_str(ts_us):
-    """Return HH:MM in ET (UTC-5 simplified)."""
+    """Return HH:MM in ET (DST-aware)."""
     try:
         unix_us = ts_us - _SC_EPOCH_OFFSET_US
-        dt_utc = datetime.datetime(1970, 1, 1) + datetime.timedelta(microseconds=unix_us)
-        dt_et = dt_utc - datetime.timedelta(hours=5)
+        dt_utc = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc) + datetime.timedelta(microseconds=unix_us)
+        dt_et = dt_utc.astimezone(ZoneInfo("America/New_York"))
         return dt_et.strftime("%H:%M")
     except Exception:
         return "00:00"
@@ -276,6 +285,14 @@ def put_trades(cfg, trades, sha):
 
 # ── Main ────────────────────────────────────────────────────────────────────
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--force", action="store_true", help="Run regardless of time/day")
+    args = parser.parse_args()
+
+    if not args.force and not sys.stdin.isatty():
+        if not in_market_window():
+            sys.exit(0)
+
     log("=== SC Bridge v2 (binary TradeActivityLogs) ===")
     cfg = load_config()
 
