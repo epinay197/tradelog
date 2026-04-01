@@ -27,11 +27,12 @@ def notify(title, msg):
 
 # ── Market-hours gate ──────────────────────────────────────
 def in_market_window():
-    """True if current ET time is 08:00-16:00 on a weekday."""
+    """True if current ET time is 04:15-16:15 on a weekday."""
     now_et = datetime.datetime.now(ZoneInfo("America/New_York"))
     if now_et.weekday() >= 5:
         return False
-    return 8 <= now_et.hour < 16
+    t = now_et.hour * 60 + now_et.minute
+    return 4 * 60 + 15 <= t < 16 * 60 + 15
 
 # ── Config ─────────────────────────────────────────────────────────────────
 def load_config():

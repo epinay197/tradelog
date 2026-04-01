@@ -42,7 +42,8 @@ def in_market_window():
     now_et = datetime.datetime.now(ET)
     if now_et.weekday() >= 5:
         return False
-    return 8 <= now_et.hour < 16
+    t = now_et.hour * 60 + now_et.minute
+    return 4 * 60 + 15 <= t < 16 * 60 + 15
 
 # ── Config ─────────────────────────────────────────────────────────────────
 def load_config():
