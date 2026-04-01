@@ -169,6 +169,9 @@ def extract_fills(fp, date_str):
         m = meta(base)
         actual_price = round(stored_price / m['denom'], 4)
 
+        # Extract trade notes from SC (tag 112 = order text notes)
+        trade_note = get_str(r, 112)
+
         fills.append({
             'date':     date_str,
             'sym_raw':  sym_raw,
@@ -178,7 +181,9 @@ def extract_fills(fp, date_str):
             'price':    actual_price,
             'order_id': order_id,
             'time':     fill_time,
+            'ts_us':    ts_us,
             'pv':       m['pv'],
+            'note':     trade_note,
         })
     return fills
 
@@ -221,6 +226,34 @@ def pair_fills(all_fills, comm_per_contract):
         entry_time = min(f['time'] for f in entry_fills)
         exit_time  = max(f['time'] for f in exit_fills)
 
+        # Compute duration in minutes from entry to exit
+        def _time_mins(t):
+            try:
+                h, m = map(int, t.split(":"))
+                return h * 60 + m
+            except Exception:
+                return 0
+        duration = max(0, _time_mins(exit_time) - _time_mins(entry_time))
+
+        # Extract notes and auto-detect setup from SC trade notes
+        all_notes = [f.get('note', '') for f in entry_fills + exit_fills]
+        combined_notes = " ".join(n for n in all_notes if n).strip()
+        setup = ""
+        # Auto-tag: look for setup keywords in notes
+        setup_keywords = {
+            "breakout": "Breakout", "BO": "Breakout",
+            "pullback": "Pullback", "PB": "Pullback",
+            "reversal": "Reversal", "REV": "Reversal",
+            "trend": "Trend", "momentum": "Momentum", "MOM": "Momentum",
+            "range": "Range", "fade": "Fade",
+            "vwap": "VWAP", "orb": "ORB",
+            "gap": "Gap Fill", "scalp": "Scalp",
+        }
+        for kw, label in setup_keywords.items():
+            if re.search(rf'\b{kw}\b', combined_notes, re.IGNORECASE):
+                setup = label
+                break
+
         trade_id = hashlib.md5(
             f"{sym_raw}{date}{avg_buy:.4f}{avg_sell:.4f}{qty}".encode()
         ).hexdigest()[:12]
@@ -238,11 +271,11 @@ def pair_fills(all_fills, comm_per_contract):
             "commission":  round(commission, 2),
             "netPnl":      round(net_pnl, 2),
             "exitTime":    exit_time,
-            "duration":    0,
+            "duration":    duration,
             "rMultiple":   0,
             "grade":       "",
-            "setup":       "",
-            "notes":       "",
+            "setup":       setup,
+            "notes":       combined_notes,
             "source":      "auto",
         })
 

@@ -235,6 +235,86 @@ def compute_by_side(trades):
     shorts = [t for t in trades if t.get("side") == "Short"]
     return {"Long": _group_metrics(longs), "Short": _group_metrics(shorts)}
 
+def compute_duration_stats(trades):
+    """Analyze trade duration (in minutes) vs P&L."""
+    durations = [(t.get("duration", 0), t["netPnl"]) for t in trades if t.get("duration", 0) > 0]
+    if not durations:
+        return {"has_data": False}
+
+    all_d = [d for d, _ in durations]
+    win_d = [d for d, p in durations if p > 0]
+    loss_d = [d for d, p in durations if p < 0]
+
+    # Duration buckets
+    buckets = [
+        ("< 5 min", 0, 5), ("5-15 min", 5, 15), ("15-30 min", 15, 30),
+        ("30-60 min", 30, 60), ("1-2 hrs", 60, 120), ("2+ hrs", 120, 9999),
+    ]
+    by_bucket = []
+    for label, lo, hi in buckets:
+        bucket_trades = [t for t in trades if t.get("duration", 0) > 0 and lo <= t["duration"] < hi]
+        if bucket_trades:
+            m = _group_metrics(bucket_trades)
+            m["bucket"] = label
+            m["avg_duration"] = round(sum(t["duration"] for t in bucket_trades) / len(bucket_trades), 1)
+            by_bucket.append(m)
+
+    return {
+        "has_data": True,
+        "avg_duration_all": round(sum(all_d) / len(all_d), 1) if all_d else 0,
+        "avg_duration_wins": round(sum(win_d) / len(win_d), 1) if win_d else 0,
+        "avg_duration_losses": round(sum(loss_d) / len(loss_d), 1) if loss_d else 0,
+        "shortest": min(all_d),
+        "longest": max(all_d),
+        "by_bucket": by_bucket,
+    }
+
+def compute_equity_curve(trades):
+    """Build cumulative P&L series for equity curve chart."""
+    sorted_trades = sorted(trades, key=lambda x: (x["date"], x["time"]))
+    cumulative = 0
+    curve = []
+    for t in sorted_trades:
+        cumulative += t["netPnl"]
+        curve.append({
+            "date": t["date"],
+            "time": t["time"],
+            "pnl": t["netPnl"],
+            "cumulative": round(cumulative, 2),
+            "symbol": t.get("symbol", ""),
+            "side": t.get("side", ""),
+        })
+    # Compute drawdown
+    peak = 0
+    max_dd = 0
+    for pt in curve:
+        peak = max(peak, pt["cumulative"])
+        dd = peak - pt["cumulative"]
+        pt["drawdown"] = round(dd, 2)
+        max_dd = max(max_dd, dd)
+    return {"curve": curve, "max_drawdown": round(max_dd, 2), "final_equity": round(cumulative, 2)}
+
+def compute_r_multiples(trades):
+    """Compute R-multiple distribution (uses avg loss as 1R baseline)."""
+    losses = [abs(t["netPnl"]) for t in trades if t["netPnl"] < 0]
+    if not losses:
+        return {"has_data": False}
+    one_r = sum(losses) / len(losses)  # Average loss = 1R
+    r_trades = []
+    for t in sorted(trades, key=lambda x: (x["date"], x["time"])):
+        r_val = round(t["netPnl"] / one_r, 2) if one_r else 0
+        r_trades.append({"date": t["date"], "time": t["time"], "symbol": t.get("symbol", ""),
+                         "pnl": t["netPnl"], "r": r_val})
+    r_vals = [rt["r"] for rt in r_trades]
+    return {
+        "has_data": True,
+        "one_r": round(one_r, 2),
+        "avg_r": round(sum(r_vals) / len(r_vals), 2),
+        "best_r": round(max(r_vals), 2),
+        "worst_r": round(min(r_vals), 2),
+        "trades": r_trades,
+    }
+
 # ── Pattern detection ──────────────────────────────────────────────────────
 def detect_patterns(trades, by_time, by_setup, by_dow):
     MIN_TRADES = 2  # minimum trades to flag a pattern
@@ -531,6 +611,72 @@ def generate_html(analytics, weekly=None):
     pat_list = "".join(pat_items) if pat_items else '<li class="m">Not enough data for pattern detection yet.</li>'
     pat_html = f'<div class="pat-box"><h3>Pattern Detection</h3><ul>{pat_list}</ul></div>'
 
+    # Duration analysis
+    dur = analytics.get("duration", {})
+    if dur.get("has_data"):
+        dur_cards = f"""
+    <div class="cards">
+      <div class="card"><div class="card-label">Avg Duration</div><div class="card-val">{dur['avg_duration_all']} min</div></div>
+      <div class="card"><div class="card-label">Avg Win Duration</div><div class="card-val" style="color:var(--green)">{dur['avg_duration_wins']} min</div></div>
+      <div class="card"><div class="card-label">Avg Loss Duration</div><div class="card-val" style="color:var(--red)">{dur['avg_duration_losses']} min</div></div>
+      <div class="card"><div class="card-label">Shortest</div><div class="card-val">{dur['shortest']} min</div></div>
+      <div class="card"><div class="card-label">Longest</div><div class="card-val">{dur['longest']} min</div></div>
+    </div>"""
+        dur_rows = ""
+        for b in dur["by_bucket"]:
+            dur_rows += f'<tr><td>{b["bucket"]}</td><td>{b["trades"]}</td>{_pct_cell(b["win_rate"])}{_pnl_cell(b["avg_pnl"])}{_pnl_cell(b["total_pnl"])}<td>{b["avg_duration"]} min</td></tr>'
+        duration_html = dur_cards + f"""
+    <table>
+      <caption>Performance by Duration Bucket</caption>
+      <tr><th>Duration</th><th>Trades</th><th>Win Rate</th><th>Avg P&amp;L</th><th>Total P&amp;L</th><th>Avg Duration</th></tr>
+      {dur_rows}
+    </table>"""
+    else:
+        duration_html = '<p class="muted" style="color:var(--muted);padding:12px 0">No duration data available yet. Trades need entry/exit timestamps.</p>'
+
+    # Equity curve (CSS bar chart)
+    eq = analytics.get("equity_curve", {})
+    if eq.get("curve"):
+        eq_cards = f"""
+    <div class="cards">
+      <div class="card"><div class="card-label">Final Equity</div><div class="card-val" style="{_pnl_color(eq['final_equity'])}">${eq['final_equity']:+,.2f}</div></div>
+      <div class="card"><div class="card-label">Max Drawdown</div><div class="card-val" style="color:var(--red)">${eq['max_drawdown']:,.2f}</div></div>
+    </div>"""
+        max_abs = max(abs(pt["cumulative"]) for pt in eq["curve"]) or 1
+        eq_bars = ""
+        for pt in eq["curve"]:
+            pct = pt["cumulative"] / max_abs * 100
+            color = "var(--green)" if pt["cumulative"] >= 0 else "var(--red)"
+            bar_w = abs(pct) * 0.45
+            align = "margin-left:50%" if pct >= 0 else f"margin-left:{50 - bar_w}%"
+            eq_bars += f'<div style="display:flex;align-items:center;margin:2px 0;font-family:var(--mono);font-size:11px"><span style="width:80px;color:var(--muted)">{pt["date"]}</span><div style="flex:1;position:relative;height:16px;background:var(--s3);border-radius:2px"><div style="position:absolute;height:100%;width:{bar_w}%;{align};background:{color};border-radius:2px;opacity:0.7"></div></div><span style="width:80px;text-align:right;color:{color}">${pt["cumulative"]:+,.0f}</span></div>'
+        equity_html = eq_cards + f'<div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:16px;overflow-x:auto">{eq_bars}</div>'
+    else:
+        equity_html = '<p style="color:var(--muted);padding:12px 0">No equity data available.</p>'
+
+    # R-Multiple analysis
+    rm = analytics.get("r_multiples", {})
+    if rm.get("has_data"):
+        rm_cards = f"""
+    <div class="cards">
+      <div class="card"><div class="card-label">1R (Avg Loss)</div><div class="card-val">${rm['one_r']:,.2f}</div></div>
+      <div class="card"><div class="card-label">Avg R</div><div class="card-val" style="{_pnl_color(rm['avg_r'])}">{rm['avg_r']:+.2f}R</div></div>
+      <div class="card"><div class="card-label">Best R</div><div class="card-val" style="color:var(--green)">{rm['best_r']:+.2f}R</div></div>
+      <div class="card"><div class="card-label">Worst R</div><div class="card-val" style="color:var(--red)">{rm['worst_r']:+.2f}R</div></div>
+    </div>"""
+        rm_rows = ""
+        for rt in rm["trades"]:
+            r_color = "var(--green)" if rt["r"] > 0 else "var(--red)" if rt["r"] < 0 else "var(--muted)"
+            rm_rows += f'<tr><td>{rt["date"]}</td><td>{rt["time"]}</td><td>{rt["symbol"]}</td>{_pnl_cell(rt["pnl"])}<td style="color:{r_color}">{rt["r"]:+.2f}R</td></tr>'
+        r_mult_html = rm_cards + f"""
+    <table>
+      <caption>R-Multiple per Trade</caption>
+      <tr><th>Date</th><th>Time</th><th>Symbol</th><th>P&amp;L</th><th>R-Multiple</th></tr>
+      {rm_rows}
+    </table>"""
+    else:
+        r_mult_html = '<p style="color:var(--muted);padding:12px 0">Need at least one losing trade to establish 1R baseline.</p>'
+
     # Weekly review section
     weekly_html = ""
     if weekly:
@@ -660,6 +806,15 @@ td.muted{{color:var(--muted)}}
 <h2>7. Pattern Detection</h2>
 <!-- Automatically identifies best/worst hours, setups, and days -->
 {pat_html}
+
+<h2>8. Trade Duration Analysis</h2>
+{duration_html}
+
+<h2>9. Equity Curve</h2>
+{equity_html}
+
+<h2>10. R-Multiple Analysis</h2>
+{r_mult_html}
 
 {weekly_html}
 
@@ -814,6 +969,69 @@ def generate_email_html(analytics, dashboard_url):
     for blk, pnl, cnt in p.get("losing_blocks", []):
         pat_items += f'<div {PATR}>Losing block: <strong>{blk}</strong> &mdash; {cnt} trades, ${pnl:+,.2f}</div>'
 
+    # Duration analysis (email)
+    dur = analytics.get("duration", {})
+    if dur.get("has_data"):
+        email_duration_html = (
+            card("Avg Duration", f'{dur["avg_duration_all"]} min') +
+            card("Avg Win Duration", f'{dur["avg_duration_wins"]} min', "#00e87a") +
+            card("Avg Loss Duration", f'{dur["avg_duration_losses"]} min', "#ff4d6a") +
+            card("Shortest", f'{dur["shortest"]} min') +
+            card("Longest", f'{dur["longest"]} min')
+        )
+        dur_rows_e = ""
+        for b in dur["by_bucket"]:
+            dur_rows_e += f'<tr>{n_td(b["bucket"])}{n_td(b["trades"])}{pct_td(b["win_rate"])}{pnl_td(b["avg_pnl"])}{pnl_td(b["total_pnl"])}{n_td(str(b["avg_duration"]) + " min")}</tr>'
+        email_duration_html += f'''<table {TBL}>
+        <tr><th {TH}>Duration</th><th {TH}>Trades</th><th {TH}>Win Rate</th><th {TH}>Avg P&amp;L</th><th {TH}>Total P&amp;L</th><th {TH}>Avg Duration</th></tr>
+        {dur_rows_e}</table>'''
+    else:
+        email_duration_html = f'<p style="color:#6060a0;padding:8px 0">No duration data available yet.</p>'
+
+    # Equity curve (email - simplified table)
+    eq = analytics.get("equity_curve", {})
+    if eq.get("curve"):
+        eq_fc = "#00e87a" if eq["final_equity"] >= 0 else "#ff4d6a"
+        email_equity_html = (
+            card("Final Equity", f'${eq["final_equity"]:+,.2f}', eq_fc) +
+            card("Max Drawdown", f'${eq["max_drawdown"]:,.2f}', "#ff4d6a")
+        )
+        # Show last 15 trades in equity table for email brevity
+        display_curve = eq["curve"][-15:] if len(eq["curve"]) > 15 else eq["curve"]
+        eq_rows_e = ""
+        for pt in display_curve:
+            c_color = "#00e87a" if pt["cumulative"] >= 0 else "#ff4d6a"
+            p_color = "#00e87a" if pt["pnl"] >= 0 else "#ff4d6a"
+            dd_txt = f'-${pt["drawdown"]:,.0f}' if pt["drawdown"] > 0 else "&mdash;"
+            eq_rows_e += f'<tr>{n_td(pt["date"])}{n_td(pt["symbol"])}<td style="padding:8px 12px;font-size:13px;border-bottom:1px solid #1f1f32;color:{p_color}">${pt["pnl"]:+,.2f}</td><td style="padding:8px 12px;font-size:13px;border-bottom:1px solid #1f1f32;color:{c_color}">${pt["cumulative"]:+,.2f}</td><td style="padding:8px 12px;font-size:13px;border-bottom:1px solid #1f1f32;color:#ff4d6a">{dd_txt}</td></tr>'
+        email_equity_html += f'''<table {TBL}>
+        <tr><th {TH}>Date</th><th {TH}>Symbol</th><th {TH}>P&amp;L</th><th {TH}>Cumulative</th><th {TH}>Drawdown</th></tr>
+        {eq_rows_e}</table>'''
+        if len(eq["curve"]) > 15:
+            email_equity_html += f'<p style="color:#6060a0;font-size:11px;padding:4px 0">Showing last 15 of {len(eq["curve"])} trades. See dashboard for full curve.</p>'
+    else:
+        email_equity_html = f'<p style="color:#6060a0;padding:8px 0">No equity data available.</p>'
+
+    # R-Multiple (email)
+    rm = analytics.get("r_multiples", {})
+    if rm.get("has_data"):
+        avg_r_c = "#00e87a" if rm["avg_r"] >= 0 else "#ff4d6a"
+        email_r_mult_html = (
+            card("1R (Avg Loss)", f'${rm["one_r"]:,.2f}') +
+            card("Avg R", f'{rm["avg_r"]:+.2f}R', avg_r_c) +
+            card("Best R", f'{rm["best_r"]:+.2f}R', "#00e87a") +
+            card("Worst R", f'{rm["worst_r"]:+.2f}R', "#ff4d6a")
+        )
+        rm_rows_e = ""
+        for rt in rm["trades"]:
+            r_c = "#00e87a" if rt["r"] > 0 else "#ff4d6a" if rt["r"] < 0 else "#6060a0"
+            rm_rows_e += f'<tr>{n_td(rt["date"])}{n_td(rt["time"])}{n_td(rt["symbol"])}{pnl_td(rt["pnl"])}<td style="padding:8px 12px;font-size:13px;border-bottom:1px solid #1f1f32;color:{r_c}">{rt["r"]:+.2f}R</td></tr>'
+        email_r_mult_html += f'''<table {TBL}>
+        <tr><th {TH}>Date</th><th {TH}>Time</th><th {TH}>Symbol</th><th {TH}>P&amp;L</th><th {TH}>R-Multiple</th></tr>
+        {rm_rows_e}</table>'''
+    else:
+        email_r_mult_html = f'<p style="color:#6060a0;padding:8px 0">Need at least one losing trade to establish 1R baseline.</p>'
+
     # Weekly section
     weekly_html = ""
     wr = analytics.get("weekly_review")
@@ -901,6 +1119,15 @@ def generate_email_html(analytics, dashboard_url):
 <h2 {H2}>7. Pattern Detection</h2>
 <div {BOX}>{pat_items}</div>
 
+<h2 {H2}>8. Trade Duration Analysis</h2>
+{email_duration_html}
+
+<h2 {H2}>9. Equity Curve</h2>
+{email_equity_html}
+
+<h2 {H2}>10. R-Multiple Analysis</h2>
+{email_r_mult_html}
+
 {weekly_html}
 
 <div style="text-align:center;color:#6060a0;font-size:11px;padding:24px 0;border-top:1px solid #252538;margin-top:32px">
@@ -942,6 +1169,61 @@ def send_email(cfg, analytics, dashboard_url):
     except Exception as e:
         log(f"Email failed: {e}")
         return False
+
+def send_loss_alert(cfg, overall):
+    """Send a warning email if currently on a 3+ consecutive loss streak."""
+    streak = overall.get("current_streak", "")
+    if not streak or not streak.endswith("L"):
+        return
+    try:
+        count = int(streak[:-1])
+    except ValueError:
+        return
+    if count < 3:
+        return
+
+    smtp_user = cfg.get("smtp_user", "")
+    smtp_pass = cfg.get("smtp_app_password", "")
+    email_to  = cfg.get("email_to", smtp_user)
+    if not smtp_user or not smtp_pass:
+        return
+
+    subject = f"ALERT: {count}-Trade Losing Streak | TradeLog"
+    body = f"""<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#07070f">
+<div style="background:#0d0d1a;color:#d0d0e8;font-family:Segoe UI,Arial,sans-serif;padding:24px;max-width:600px;margin:0 auto">
+<h1 style="color:#ff4d6a;font-size:22px;margin:0 0 12px">Losing Streak Alert</h1>
+<div style="background:#181828;border:1px solid #ff4d6a;border-radius:8px;padding:18px;margin:12px 0">
+<p style="font-size:16px;margin:0 0 12px">You are currently on a <strong style="color:#ff4d6a;font-size:20px">{count}-trade losing streak</strong>.</p>
+<p style="font-size:14px;color:#d0d0e8;margin:0 0 8px">Current stats: {overall['win_rate']}% WR | ${overall['total_pnl']:+,.2f} total P&L</p>
+<p style="font-size:14px;color:#d0d0e8;margin:0">Max consecutive losses ever: {overall['max_loss_streak']}</p>
+</div>
+<h2 style="color:#ffd060;font-size:16px;margin:20px 0 8px">Recommended Actions</h2>
+<div style="padding:10px 14px;background:#181828;border-left:3px solid #ffd060;border-radius:4px;margin:8px 0;font-size:14px">
+Reduce position size by 50% until streak breaks
+</div>
+<div style="padding:10px 14px;background:#181828;border-left:3px solid #ffd060;border-radius:4px;margin:8px 0;font-size:14px">
+Review last {count} trade entries — are you forcing setups?
+</div>
+<div style="padding:10px 14px;background:#181828;border-left:3px solid #ffd060;border-radius:4px;margin:8px 0;font-size:14px">
+Consider sitting out the next session if streak reaches {count + 2}
+</div>
+<p style="color:#6060a0;font-size:11px;margin-top:24px;text-align:center">TradeLog Analytics Engine — Automated Risk Alert</p>
+</div></body></html>"""
+
+    msg = MIMEMultipart("alternative")
+    msg["From"]    = smtp_user
+    msg["To"]      = email_to
+    msg["Subject"] = subject
+    msg.attach(MIMEText(body, "html"))
+
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=15) as s:
+            s.login(smtp_user, smtp_pass)
+            s.sendmail(smtp_user, email_to, msg.as_string())
+        log(f"LOSS ALERT sent ({count}-trade streak)")
+    except Exception as e:
+        log(f"Loss alert email failed: {e}")
 
 # ── Auto-open dashboard ────────────────────────────────────────────────────
 def open_dashboard(url, close_after=300):
@@ -994,13 +1276,16 @@ def main():
         return
 
     # Compute all analytics
-    overall   = compute_overall(trades)
-    by_setup  = compute_by_setup(trades)
-    by_time   = compute_by_time(trades)
-    by_dow    = compute_by_dow(trades)
-    by_symbol = compute_by_symbol(trades)
-    by_side   = compute_by_side(trades)
-    patterns  = detect_patterns(trades, by_time, by_setup, by_dow)
+    overall    = compute_overall(trades)
+    by_setup   = compute_by_setup(trades)
+    by_time    = compute_by_time(trades)
+    by_dow     = compute_by_dow(trades)
+    by_symbol  = compute_by_symbol(trades)
+    by_side    = compute_by_side(trades)
+    patterns   = detect_patterns(trades, by_time, by_setup, by_dow)
+    duration   = compute_duration_stats(trades)
+    equity     = compute_equity_curve(trades)
+    r_multiples = compute_r_multiples(trades)
 
     analytics = {
         "generated_at": datetime.datetime.now(ET).strftime("%Y-%m-%d %H:%M ET"),
@@ -1012,6 +1297,9 @@ def main():
         "by_symbol": by_symbol,
         "by_side": by_side,
         "patterns": patterns,
+        "duration": duration,
+        "equity_curve": equity,
+        "r_multiples": r_multiples,
         "summary": generate_summary(overall, patterns),
         "recommendations": generate_recommendations(overall, patterns, by_side),
     }
@@ -1048,6 +1336,7 @@ def main():
             notify("TradeLog Analytics", f"{overall['trades']} trades | {overall['win_rate']}% WR | ${overall['total_pnl']:+,.2f}")
             dashboard_url = f"https://{cfg['gh_owner']}.github.io/{cfg['gh_repo']}/analytics.html"
             send_email(cfg, analytics, dashboard_url)
+            send_loss_alert(cfg, overall)
             open_dashboard(dashboard_url)
         else:
             log(f"ERROR: push failed (json={'OK' if ok1 else 'FAIL'}, html={'OK' if ok2 else 'FAIL'})")
