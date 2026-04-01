@@ -95,11 +95,22 @@ if %errorlevel% equ 0 (
     echo [WARN] Could not register task. Run as Administrator.
 )
 
+:: Register analytics task (every 15 min, ET market-hours gated in Python)
+echo [*] Registering analytics task (every 15 min)...
+schtasks /create /tn "TradeLog Analytics" /tr "python \"%SCRIPT_DIR%trade_analytics.py\"" /sc minute /mo 15 /f >/dev/null
+if %errorlevel% equ 0 (
+    echo [OK] Analytics scheduled: every 15 min, ET market-hours gated
+) else (
+    echo [WARN] Could not register analytics task.
+)
+
 echo.
 echo  ========================================
 echo   Setup complete!
-echo   Journal: https://!GH_OWNER!.github.io/!GH_REPO!/
-echo   Auto-sync: hourly during ET market hours (Mon-Fri 8AM-4PM)
+echo   Journal:   https://!GH_OWNER!.github.io/!GH_REPO!/
+echo   Analytics: https://!GH_OWNER!.github.io/!GH_REPO!/analytics.html
+echo   Trade sync: hourly during ET market hours (Mon-Fri 8AM-4PM)
+echo   Analytics:  every 15 min during ET market hours
 echo  ========================================
 echo.
 pause
