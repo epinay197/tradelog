@@ -683,8 +683,236 @@ def push_file(cfg, path, content_str, message):
     return status in (200, 201)
 
 # ── Email notification ─────────────────────────────────────────────────────
+def _email_pnl(val):
+    if val > 0: return f'<span style="color:#00e87a">${val:+,.2f}</span>'
+    if val < 0: return f'<span style="color:#ff4d6a">${val:+,.2f}</span>'
+    return f'<span style="color:#6060a0">${val:+,.2f}</span>'
+
+def _email_pct(val):
+    c = "#00e87a" if val >= 50 else "#ff4d6a"
+    return f'<span style="color:{c}">{val:.1f}%</span>'
+
+def generate_email_html(analytics, dashboard_url):
+    """Build a full HTML email matching the dashboard style with all statistics."""
+    o = analytics["overall"]
+    ts = analytics["generated_at"]
+    p = analytics["patterns"]
+
+    # Inline styles for email compatibility (no CSS variables)
+    S = 'style="background:#0d0d1a;color:#d0d0e8;font-family:Segoe UI,Arial,sans-serif;font-size:14px;padding:24px;max-width:700px;margin:0 auto"'
+    TBL = 'style="width:100%;border-collapse:collapse;margin:12px 0 24px;background:#0d0d1a;border:1px solid #252538"'
+    TH = 'style="padding:8px 12px;text-align:left;font-size:11px;color:#6060a0;text-transform:uppercase;letter-spacing:0.5px;background:#12121f;border-bottom:1px solid #252538"'
+    TD = 'style="padding:8px 12px;font-size:13px;border-bottom:1px solid #1f1f32;color:#d0d0e8"'
+    H2 = 'style="font-size:16px;color:#d0d0e8;margin:24px 0 8px;padding-bottom:6px;border-bottom:1px solid #252538"'
+    CARD = 'style="display:inline-block;background:#12121f;border:1px solid #252538;border-radius:8px;padding:12px 16px;margin:4px;min-width:130px;vertical-align:top"'
+    CLBL = 'style="font-size:10px;color:#6060a0;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px"'
+    CVAL = 'style="font-size:18px;font-weight:700"'
+    BOX = 'style="background:#12121f;border:1px solid #252538;border-radius:8px;padding:14px 18px;margin:12px 0"'
+    REC = 'style="padding:8px 12px;margin:6px 0;border-radius:4px;background:#181828;border-left:3px solid #ffd060;font-size:13px;line-height:1.6;color:#d0d0e8"'
+    PATG = 'style="padding:8px 12px;margin:6px 0;border-radius:4px;background:#181828;border-left:3px solid #00e87a;font-size:13px;color:#d0d0e8"'
+    PATR = 'style="padding:8px 12px;margin:6px 0;border-radius:4px;background:#181828;border-left:3px solid #ff4d6a;font-size:13px;color:#d0d0e8"'
+
+    def pnl_td(val):
+        c = "#00e87a" if val > 0 else "#ff4d6a" if val < 0 else "#6060a0"
+        return f'<td style="padding:8px 12px;font-size:13px;border-bottom:1px solid #1f1f32;color:{c}">${val:+,.2f}</td>'
+
+    def pct_td(val):
+        c = "#00e87a" if val >= 50 else "#ff4d6a"
+        return f'<td style="padding:8px 12px;font-size:13px;border-bottom:1px solid #1f1f32;color:{c}">{val:.1f}%</td>'
+
+    def n_td(val):
+        return f'<td {TD}>{val}</td>'
+
+    # Cards
+    def card(label, val, color="#d0d0e8"):
+        return f'<div {CARD}><div {CLBL}>{label}</div><div {CVAL} style="font-size:18px;font-weight:700;color:{color}">{val}</div></div>'
+
+    wr_c = "#00e87a" if o["win_rate"] >= 50 else "#ff4d6a"
+    pnl_c = "#00e87a" if o["total_pnl"] >= 0 else "#ff4d6a"
+    exp_c = "#00e87a" if o["expectancy"] >= 0 else "#ff4d6a"
+    pf_c = "#00e87a" if o["profit_factor"] >= 1 else "#ff4d6a"
+
+    cards_html = (
+        card("Total Trades", o["trades"]) +
+        card("Win Rate", f'{o["win_rate"]}%', wr_c) +
+        card("Expectancy", f'${o["expectancy"]:+,.2f}', exp_c) +
+        card("Profit Factor", f'{o["profit_factor"]:.2f}', pf_c) +
+        card("Total P&amp;L", f'${o["total_pnl"]:+,.2f}', pnl_c) +
+        card("Avg P&amp;L", f'${o["avg_pnl"]:+,.2f}', pnl_c) +
+        card("Largest Win", f'${o["largest_win"]:+,.2f}', "#00e87a") +
+        card("Largest Loss", f'${o["largest_loss"]:+,.2f}', "#ff4d6a") +
+        card("Avg Win", f'${o["avg_win"]:+,.2f}', "#00e87a") +
+        card("Avg Loss", f'${o["avg_loss"]:+,.2f}', "#ff4d6a") +
+        card("W / L", f'{o["winners"]} / {o["losers"]}') +
+        card("Streak", o["current_streak"])
+    )
+
+    # Overall stats table
+    def stat_row(label, val):
+        return f'<tr><td {TD}>{label}</td><td {TD}>{val}</td></tr>'
+
+    overall_rows = (
+        stat_row("Total Trades", o["trades"]) +
+        stat_row("Winners / Losers / BE", f'{o["winners"]} / {o["losers"]} / {o["breakeven"]}') +
+        stat_row("Win Rate", _email_pct(o["win_rate"])) +
+        stat_row("Total P&amp;L", _email_pnl(o["total_pnl"])) +
+        stat_row("Avg P&amp;L per Trade", _email_pnl(o["avg_pnl"])) +
+        stat_row("Avg Win", _email_pnl(o["avg_win"])) +
+        stat_row("Avg Loss", _email_pnl(o["avg_loss"])) +
+        stat_row("Largest Win", _email_pnl(o["largest_win"])) +
+        stat_row("Largest Loss", _email_pnl(o["largest_loss"])) +
+        stat_row("Expectancy", _email_pnl(o["expectancy"])) +
+        stat_row("Profit Factor", f'{o["profit_factor"]:.2f}') +
+        stat_row("Max Win Streak", o["max_win_streak"]) +
+        stat_row("Max Loss Streak", o["max_loss_streak"]) +
+        stat_row("Current Streak", o["current_streak"])
+    )
+
+    # Setup table
+    setup_rows = ""
+    for s in analytics["by_setup"]:
+        setup_rows += f'<tr>{n_td(s["setup"])}{n_td(s["trades"])}{pct_td(s["win_rate"])}{pnl_td(s["avg_win"])}{pnl_td(s["avg_loss"])}{pnl_td(s["total_pnl"])}{pnl_td(s["expectancy"])}</tr>'
+
+    # Time of day table
+    time_rows = ""
+    for b in analytics["by_time_of_day"]:
+        if b["trades"] > 0:
+            time_rows += f'<tr>{n_td(b["block"])}{n_td(b["trades"])}{pct_td(b["win_rate"])}{pnl_td(b["avg_win"])}{pnl_td(b["avg_loss"])}{pnl_td(b["total_pnl"])}</tr>'
+        else:
+            time_rows += f'<tr>{n_td(b["block"])}<td {TD} style="color:#6060a0">0</td><td {TD} style="color:#6060a0">&mdash;</td><td {TD} style="color:#6060a0">&mdash;</td><td {TD} style="color:#6060a0">&mdash;</td><td {TD} style="color:#6060a0">&mdash;</td></tr>'
+
+    # Day of week table
+    dow_rows = ""
+    for d in analytics["by_day_of_week"]:
+        if d["trades"] > 0:
+            dow_rows += f'<tr>{n_td(d["day"])}{n_td(d["trades"])}{pct_td(d["win_rate"])}{pnl_td(d["avg_win"])}{pnl_td(d["avg_loss"])}{pnl_td(d["total_pnl"])}</tr>'
+        else:
+            dow_rows += f'<tr>{n_td(d["day"])}<td {TD} style="color:#6060a0">0</td><td {TD} style="color:#6060a0">&mdash;</td><td {TD} style="color:#6060a0">&mdash;</td><td {TD} style="color:#6060a0">&mdash;</td><td {TD} style="color:#6060a0">&mdash;</td></tr>'
+
+    # Symbol table
+    sym_rows = ""
+    for s in analytics["by_symbol"]:
+        sym_rows += f'<tr>{n_td(s["symbol"])}{n_td(s["trades"])}{pct_td(s["win_rate"])}{pnl_td(s["avg_pnl"])}{pnl_td(s["total_pnl"])}</tr>'
+
+    # Side table
+    side_rows = ""
+    for side in ["Long", "Short"]:
+        sd = analytics["by_side"][side]
+        side_rows += f'<tr>{n_td(side)}{n_td(sd["trades"])}{pct_td(sd["win_rate"])}{pnl_td(sd["avg_pnl"])}{pnl_td(sd["total_pnl"])}</tr>'
+
+    # Recommendations
+    recs_html = "".join(f'<div {REC}>{r}</div>' for r in analytics["recommendations"])
+
+    # Pattern detection
+    pat_items = ""
+    if p["best_hour"]:  pat_items += f'<div {PATG}>Best hour: <strong>{p["best_hour"][0]}</strong> &mdash; avg ${p["best_hour"][1]:+,.2f}</div>'
+    if p["worst_hour"]: pat_items += f'<div {PATR}>Worst hour: <strong>{p["worst_hour"][0]}</strong> &mdash; avg ${p["worst_hour"][1]:+,.2f}</div>'
+    if p["best_setup"]: pat_items += f'<div {PATG}>Best setup: <strong>{p["best_setup"][0]}</strong> &mdash; avg ${p["best_setup"][1]:+,.2f}</div>'
+    if p["worst_setup"]:pat_items += f'<div {PATR}>Worst setup: <strong>{p["worst_setup"][0]}</strong> &mdash; avg ${p["worst_setup"][1]:+,.2f}</div>'
+    if p["best_day"]:   pat_items += f'<div {PATG}>Best day: <strong>{p["best_day"][0]}</strong> &mdash; avg ${p["best_day"][1]:+,.2f}</div>'
+    if p["worst_day"]:  pat_items += f'<div {PATR}>Worst day: <strong>{p["worst_day"][0]}</strong> &mdash; avg ${p["worst_day"][1]:+,.2f}</div>'
+    for blk, pnl, cnt in p.get("losing_blocks", []):
+        pat_items += f'<div {PATR}>Losing block: <strong>{blk}</strong> &mdash; {cnt} trades, ${pnl:+,.2f}</div>'
+
+    # Weekly section
+    weekly_html = ""
+    wr = analytics.get("weekly_review")
+    if wr:
+        cw = wr["current_week"]
+        cw_c = "#00e87a" if cw["total_pnl"] >= 0 else "#ff4d6a"
+        weekly_html = f'''
+        <h2 {H2}>Weekly Review &mdash; Week {wr["week_number"]} ({wr["date_range"]})</h2>
+        {card("Week Trades", cw["trades"])}
+        {card("Week Win Rate", f'{cw["win_rate"]}%', "#00e87a" if cw["win_rate"]>=50 else "#ff4d6a")}
+        {card("Week P&amp;L", f'${cw["total_pnl"]:+,.2f}', cw_c)}
+        {card("Week Expectancy", f'${cw["expectancy"]:+,.2f}', "#00e87a" if cw["expectancy"]>=0 else "#ff4d6a")}
+        '''
+        if wr.get("delta_vs_prior"):
+            d = wr["delta_vs_prior"]
+            pw = wr["prior_week"]
+            weekly_html += f'''
+            <table {TBL}>
+            <tr><th {TH}>Metric</th><th {TH}>This Week</th><th {TH}>Prior Week</th><th {TH}>Delta</th></tr>
+            <tr>{n_td("Win Rate")}{pct_td(cw["win_rate"])}{pct_td(pw["win_rate"])}{pnl_td(d["win_rate"])}</tr>
+            <tr>{n_td("Avg P&amp;L")}{pnl_td(cw["avg_pnl"])}{pnl_td(pw["avg_pnl"])}{pnl_td(d["avg_pnl"])}</tr>
+            <tr>{n_td("Total P&amp;L")}{pnl_td(cw["total_pnl"])}{pnl_td(pw["total_pnl"])}{pnl_td(d["total_pnl"])}</tr>
+            </table>'''
+        if wr.get("daily_breakdown"):
+            day_rows = ""
+            for db in wr["daily_breakdown"]:
+                day_rows += f'<tr>{n_td(db["day"])}{n_td(db["date"])}{n_td(db["trades"])}{pct_td(db["win_rate"])}{pnl_td(db["total_pnl"])}</tr>'
+            weekly_html += f'''
+            <table {TBL}>
+            <tr><th {TH}>Day</th><th {TH}>Date</th><th {TH}>Trades</th><th {TH}>Win Rate</th><th {TH}>P&amp;L</th></tr>
+            {day_rows}
+            </table>'''
+
+    return f'''<!DOCTYPE html>
+<html><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#07070f">
+<div {S}>
+
+<h1 style="font-size:22px;color:#d0d0e8;margin:0">TradeLog Analytics</h1>
+<p style="color:#6060a0;font-size:12px;margin:4px 0 20px">{ts} &nbsp;|&nbsp; {o["trades"]} trades analyzed</p>
+
+{cards_html}
+
+<div {BOX}><p style="line-height:1.7;margin:0">{analytics["summary"]}</p></div>
+
+<h2 {H2}>Recommendations</h2>
+{recs_html}
+
+<h2 {H2}>1. Overall Statistics</h2>
+<table {TBL}>
+<tr><th {TH}>Metric</th><th {TH}>Value</th></tr>
+{overall_rows}
+</table>
+
+<h2 {H2}>2. Performance by Setup Type</h2>
+<table {TBL}>
+<tr><th {TH}>Setup</th><th {TH}>Trades</th><th {TH}>Win Rate</th><th {TH}>Avg Win</th><th {TH}>Avg Loss</th><th {TH}>Total P&amp;L</th><th {TH}>Expectancy</th></tr>
+{setup_rows}
+</table>
+
+<h2 {H2}>3. Performance by Time of Day</h2>
+<table {TBL}>
+<tr><th {TH}>Time Block</th><th {TH}>Trades</th><th {TH}>Win Rate</th><th {TH}>Avg Win</th><th {TH}>Avg Loss</th><th {TH}>Total P&amp;L</th></tr>
+{time_rows}
+</table>
+
+<h2 {H2}>4. Performance by Day of Week</h2>
+<table {TBL}>
+<tr><th {TH}>Day</th><th {TH}>Trades</th><th {TH}>Win Rate</th><th {TH}>Avg Win</th><th {TH}>Avg Loss</th><th {TH}>Total P&amp;L</th></tr>
+{dow_rows}
+</table>
+
+<h2 {H2}>5. Performance by Symbol</h2>
+<table {TBL}>
+<tr><th {TH}>Symbol</th><th {TH}>Trades</th><th {TH}>Win Rate</th><th {TH}>Avg P&amp;L</th><th {TH}>Total P&amp;L</th></tr>
+{sym_rows}
+</table>
+
+<h2 {H2}>6. Long vs Short</h2>
+<table {TBL}>
+<tr><th {TH}>Side</th><th {TH}>Trades</th><th {TH}>Win Rate</th><th {TH}>Avg P&amp;L</th><th {TH}>Total P&amp;L</th></tr>
+{side_rows}
+</table>
+
+<h2 {H2}>7. Pattern Detection</h2>
+<div {BOX}>{pat_items}</div>
+
+{weekly_html}
+
+<div style="text-align:center;color:#6060a0;font-size:11px;padding:24px 0;border-top:1px solid #252538;margin-top:32px">
+<a href="{dashboard_url}" style="color:#4d9dff;text-decoration:none">Open Full Dashboard</a>
+&nbsp;&mdash;&nbsp; TradeLog Analytics Engine
+</div>
+
+</div>
+</body></html>'''
+
 def send_email(cfg, analytics, dashboard_url):
-    """Send analytics summary email via Gmail SMTP."""
+    """Send full HTML analytics email via Gmail SMTP."""
     smtp_user = cfg.get("smtp_user", "")
     smtp_pass = cfg.get("smtp_app_password", "")
     email_to  = cfg.get("email_to", smtp_user)
@@ -694,76 +922,16 @@ def send_email(cfg, analytics, dashboard_url):
 
     o = analytics["overall"]
     ts = analytics["generated_at"]
-    pnl_emoji = "+" if o["total_pnl"] >= 0 else ""
 
-    subject = f"TradeLog Analytics | {o['win_rate']}% WR | ${pnl_emoji}{o['total_pnl']:,.2f} | {ts}"
+    subject = f"TradeLog Analytics | {o['win_rate']}% WR | ${'+' if o['total_pnl']>=0 else ''}{o['total_pnl']:,.2f} | {ts}"
 
-    # Build plain-text body
-    lines = [
-        f"TradeLog Analytics — {ts}",
-        f"{'=' * 50}",
-        "",
-        "SUMMARY",
-        analytics["summary"],
-        "",
-        f"{'─' * 50}",
-        "OVERALL STATISTICS",
-        f"  Trades:       {o['trades']} ({o['winners']}W / {o['losers']}L)",
-        f"  Win Rate:     {o['win_rate']}%",
-        f"  Total P&L:    ${o['total_pnl']:+,.2f}",
-        f"  Avg P&L:      ${o['avg_pnl']:+,.2f}",
-        f"  Expectancy:   ${o['expectancy']:+,.2f}",
-        f"  Profit Factor:{o['profit_factor']:.2f}",
-        f"  Avg Win:      ${o['avg_win']:+,.2f}",
-        f"  Avg Loss:     ${o['avg_loss']:+,.2f}",
-        f"  Largest Win:  ${o['largest_win']:+,.2f}",
-        f"  Largest Loss: ${o['largest_loss']:+,.2f}",
-        f"  Streak:       {o['current_streak']}",
-        "",
-        f"{'─' * 50}",
-        "PERFORMANCE BY TIME OF DAY",
-    ]
-    for b in analytics["by_time_of_day"]:
-        if b["trades"] > 0:
-            lines.append(f"  {b['block']:>14s}  {b['trades']:>3d} trades  {b['win_rate']:>5.1f}% WR  ${b['total_pnl']:>+10,.2f}")
-
-    lines += ["", f"{'─' * 50}", "PERFORMANCE BY DAY OF WEEK"]
-    for d in analytics["by_day_of_week"]:
-        if d["trades"] > 0:
-            lines.append(f"  {d['day']:>12s}  {d['trades']:>3d} trades  {d['win_rate']:>5.1f}% WR  ${d['total_pnl']:>+10,.2f}")
-
-    lines += ["", f"{'─' * 50}", "PERFORMANCE BY SYMBOL"]
-    for s in analytics["by_symbol"]:
-        lines.append(f"  {s['symbol']:>8s}  {s['trades']:>3d} trades  {s['win_rate']:>5.1f}% WR  ${s['total_pnl']:>+10,.2f}")
-
-    lines += ["", f"{'─' * 50}", "LONG vs SHORT"]
-    for side in ["Long", "Short"]:
-        sd = analytics["by_side"][side]
-        if sd["trades"] > 0:
-            lines.append(f"  {side:>8s}  {sd['trades']:>3d} trades  {sd['win_rate']:>5.1f}% WR  ${sd['total_pnl']:>+10,.2f}")
-
-    lines += ["", f"{'─' * 50}", "RECOMMENDATIONS"]
-    for i, r in enumerate(analytics["recommendations"], 1):
-        lines.append(f"  {i}. {r}")
-
-    p = analytics["patterns"]
-    lines += ["", f"{'─' * 50}", "PATTERN DETECTION"]
-    if p["best_hour"]:  lines.append(f"  Best hour:  {p['best_hour'][0]} (avg ${p['best_hour'][1]:+,.2f})")
-    if p["worst_hour"]: lines.append(f"  Worst hour: {p['worst_hour'][0]} (avg ${p['worst_hour'][1]:+,.2f})")
-    if p["best_day"]:   lines.append(f"  Best day:   {p['best_day'][0]} (avg ${p['best_day'][1]:+,.2f})")
-    if p["worst_day"]:  lines.append(f"  Worst day:  {p['worst_day'][0]} (avg ${p['worst_day'][1]:+,.2f})")
-    for blk, pnl, cnt in p.get("losing_blocks", []):
-        lines.append(f"  ALERT: {blk} — {cnt} trades, ${pnl:+,.2f}")
-
-    lines += ["", f"{'─' * 50}", f"Full dashboard: {dashboard_url}", ""]
-
-    body = "\n".join(lines)
+    html_body = generate_email_html(analytics, dashboard_url)
 
     msg = MIMEMultipart("alternative")
     msg["From"]    = smtp_user
     msg["To"]      = email_to
     msg["Subject"] = subject
-    msg.attach(MIMEText(body, "plain"))
+    msg.attach(MIMEText(html_body, "html"))
 
     try:
         with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=15) as s:
