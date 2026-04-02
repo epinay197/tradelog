@@ -75,9 +75,14 @@ LINE_RE = re.compile(
 FILL_RE = re.compile(
     r'(BUY|SELL)\s+@\s+([\d.]+)\s+Z=([\d.+-]+)\s+ATR=([\d.]+)\s+#(\d+)\s+\[(\w+)\]')
 WIN_RE = re.compile(
-    r'#(\d+)\s+PnL=([+\-\d.]+)\s+Day=\$([+\-\d.]+)\s+WR=(\d+)%')
+    r'#(\d+)\s+PnL=([+\-\d.]+)\s+Day=\$([+\-\d.]+)\s+WR=(\d+)%.*?\[(\w+)\]')
 LOSS_RE = re.compile(
-    r'#(\d+)\s+PnL=([+\-\d.]+)\s+Day=\$([+\-\d.]+)\s+Consec=(\d+)\s+WR=(\d+)%')
+    r'#(\d+)\s+PnL=([+\-\d.]+)\s+Day=\$([+\-\d.]+)\s+Consec=(\d+)\s+WR=(\d+)%.*?\[(\w+)\]')
+ENTRY_RE = re.compile(
+    r'Z=([\d.+-]+)\s+effZ=([\d.]+)\s+\w+=[\d.]+\s+ATR=([\d.]+)\s+qty=(\d+)\s+(?:stop=(\d+)tk\s+)?VIX=([\d.]+)\s+EQ=(\w+)\s+\[(\w+)\]')
+
+# Expected max stop in ticks per symbol (after dollar cap fix)
+EXPECTED_MAX_STOP = {"NQ": 15, "ES": 45, "YM": 85, "RTY": 85}
 TRAIL_RE = re.compile(r'peak=([+\-\d.]+)\s+dd=([\d.]+)\s+\[(\w+)\]')
 HARD_RE = re.compile(r'loss=([+\-\d.]+)\s+limit=([+\-\d.]+)\s+\[(\w+)\]')
 BE_RE = re.compile(r'peak=([+\-\d.]+)\s+now=([+\-\d.]+)\s+\[(\w+)\]')
@@ -123,6 +128,7 @@ def parse_new_lines(log_path, start_line):
                             "pnl": float(wm.group(2)),
                             "day_pnl": float(wm.group(3)),
                             "win_rate": int(wm.group(4)),
+                            "symbol": get_base(wm.group(5)),
                             "exit_type": "win"})
 
         elif tag == "V7_LOSS":
@@ -133,7 +139,22 @@ def parse_new_lines(log_path, start_line):
                             "day_pnl": float(lm.group(3)),
                             "consec": int(lm.group(4)),
                             "win_rate": int(lm.group(5)),
+                            "symbol": get_base(lm.group(6)),
                             "exit_type": "loss"})
+
+        elif tag.startswith("V7_ENTRY"):
+            em = ENTRY_RE.search(payload)
+            if em:
+                stop_tk = int(em.group(5)) if em.group(5) else None
+                evt.update({"z": float(em.group(1)),
+                            "eff_z": float(em.group(2)),
+                            "atr": float(em.group(3)),
+                            "qty": int(em.group(4)),
+                            "stop_tk": stop_tk,
+                            "vix": float(em.group(6)),
+                            "eq_mode": em.group(7),
+                            "symbol": get_base(em.group(8)),
+                            "sym_raw": em.group(8)})
 
         elif tag == "V7_TRAIL_STOP":
             tm = TRAIL_RE.search(payload)
@@ -202,6 +223,7 @@ def analyze(events, state, today_str):
         state["last_date"] = today_str
         state["fills_today"] = []
         state["exits_today"] = []
+        state["entries_today"] = []
         state["daily_pnl"] = 0.0
         state["errors"] = []
         state["alerts_sent"] = []
@@ -210,13 +232,25 @@ def analyze(events, state, today_str):
     new_exits = []
     new_errors = []
     new_starts = []
+    new_entries = []
     kill_count = 0
 
     for evt in events:
         if evt["date"] != today_str:
             continue
 
-        if evt["tag"] == "V7_FILL":
+        if evt["tag"].startswith("V7_ENTRY"):
+            new_entries.append(evt)
+            if "entries_today" not in state:
+                state["entries_today"] = []
+            if evt.get("stop_tk") is not None:
+                state["entries_today"].append({
+                    "time": evt["time"], "symbol": evt.get("symbol", "?"),
+                    "stop_tk": evt.get("stop_tk", 0),
+                    "atr": evt.get("atr", 0), "eq_mode": evt.get("eq_mode", "?")
+                })
+
+        elif evt["tag"] == "V7_FILL":
             new_fills.append(evt)
             state["fills_today"].append({
                 "time": evt["time"], "symbol": evt.get("symbol", "?"),
@@ -232,7 +266,8 @@ def analyze(events, state, today_str):
             state["exits_today"].append({
                 "time": evt["time"], "type": evt.get("exit_type", "?"),
                 "pnl": pnl, "day_pnl": evt.get("day_pnl", 0),
-                "win_rate": evt.get("win_rate", 0)
+                "win_rate": evt.get("win_rate", 0),
+                "symbol": evt.get("symbol", "?")
             })
 
         elif evt["tag"] in ("V7_TRAIL_STOP", "V7_HARD_STOP", "V7_BE_GUARD"):
@@ -293,22 +328,35 @@ def analyze(events, state, today_str):
 
     report.append("")
 
-    # -- Daily scoreboard --
+    # -- Daily scoreboard with per-symbol PnL --
     report.append("SCOREBOARD")
     report.append("-" * 50)
-    fills_by_sym = defaultdict(list)
+
+    # Per-symbol PnL from WIN/LOSS events
+    sym_pnl = defaultdict(lambda: {"wins": 0, "losses": 0, "pnl": 0.0, "fills": 0})
     for f in state["fills_today"]:
-        fills_by_sym[f["symbol"]].append(f)
+        sym_pnl[f["symbol"]]["fills"] += 1
+    for e in state["exits_today"]:
+        sym = e.get("symbol", "?")
+        p = e.get("pnl", 0)
+        if p > 0:
+            sym_pnl[sym]["wins"] += 1
+        elif p < 0:
+            sym_pnl[sym]["losses"] += 1
+        sym_pnl[sym]["pnl"] += p
 
-    for sym in sorted(fills_by_sym.keys()):
-        fills = fills_by_sym[sym]
-        report.append(f"  {sym:>4}: {len(fills)} trade(s)")
+    for sym in sorted(sym_pnl.keys()):
+        d = sym_pnl[sym]
+        w, l = d["wins"], d["losses"]
+        swr = (w / (w + l) * 100) if (w + l) > 0 else 0
+        sp = d["pnl"]
+        sp_str = f"+${sp:.2f}" if sp >= 0 else f"-${abs(sp):.2f}"
+        report.append(f"  {sym:>4}: {d['fills']}T  {w}W/{l}L  WR={swr:.0f}%  {sp_str}")
 
-    wins = sum(1 for e in state["exits_today"] if e.get("type") == "win"
-               or (e.get("pnl", 0) > 0))
+    wins = sum(1 for e in state["exits_today"] if e.get("pnl", 0) > 0)
     losses = sum(1 for e in state["exits_today"] if e.get("pnl", 0) < 0)
     wr = (wins / (wins + losses) * 100) if (wins + losses) > 0 else 0
-    report.append(f"  W/L: {wins}/{losses}  WR: {wr:.0f}%  Net: {pnl_str}")
+    report.append(f"  {'TOTAL':>4}: W/L={wins}/{losses}  WR={wr:.0f}%  Net={pnl_str}")
     report.append("")
 
     # -- Anomaly detection (triggers alerts) --
@@ -366,6 +414,47 @@ def analyze(events, state, today_str):
             alerts.append({"severity": "CRITICAL", "msg": msg})
             state["alerts_sent"].append(alert_key)
             report.append(f"  [!!] ALERT: {msg}")
+
+    # Alert: Uncapped stop detected (CurrencyValuePerTick=0 bug)
+    for entry in new_entries:
+        sym = entry.get("symbol", "?")
+        stop_tk = entry.get("stop_tk")
+        if stop_tk is not None and sym in EXPECTED_MAX_STOP:
+            expected = EXPECTED_MAX_STOP[sym]
+            if stop_tk > expected:
+                alert_key = f"uncapped_stop_{today_str}_{sym}"
+                if alert_key not in state["alerts_sent"]:
+                    msg = (f"UNCAPPED STOP on {sym}: stop={stop_tk}tk "
+                           f"(expected <={expected}tk). Dollar cap NOT working! "
+                           f"Recompile with SLOT_CVPT fix.")
+                    alerts.append({"severity": "CRITICAL", "msg": msg})
+                    state["alerts_sent"].append(alert_key)
+                    report.append(f"  [!!] ALERT: {msg}")
+
+    # Alert: Per-symbol bleed — one symbol -$30+ while others green
+    for sym, d in sym_pnl.items():
+        if d["pnl"] < -30 and d["losses"] >= 2:
+            others_ok = all(v["pnl"] >= 0 for k, v in sym_pnl.items() if k != sym)
+            if others_ok:
+                alert_key = f"sym_bleed_{today_str}_{sym}_{d['losses']}L"
+                if alert_key not in state["alerts_sent"]:
+                    msg = (f"{sym} BLEEDING: ${d['pnl']:.2f} "
+                           f"({d['wins']}W/{d['losses']}L) while others profitable. "
+                           f"Check stop sizing / dollar cap.")
+                    alerts.append({"severity": "WARNING", "msg": msg})
+                    state["alerts_sent"].append(alert_key)
+                    report.append(f"  [!] ALERT: {msg}")
+
+    # Alert: EQ_REDUCED mode active (drawdown > 15%)
+    for entry in new_entries:
+        if entry.get("eq_mode") == "REDUCED":
+            sym = entry.get("symbol", "?")
+            alert_key = f"eq_reduced_{today_str}_{sym}"
+            if alert_key not in state["alerts_sent"]:
+                msg = f"{sym} in REDUCED equity mode (drawdown > 15%). Position sizing halved."
+                alerts.append({"severity": "WARNING", "msg": msg})
+                state["alerts_sent"].append(alert_key)
+                report.append(f"  [!] ALERT: {msg}")
 
     return report, alerts, state
 
