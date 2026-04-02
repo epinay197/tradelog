@@ -1,0 +1,11 @@
+V7 PULSE [07:03 ET]  Trades: 8  P&L: +$28.50
+--------------------------------------------------
+  No new activity since last check
+
+SCOREBOARD
+--------------------------------------------------
+    ES: 1 trade(s)
+    NQ: 5 trade(s)
+   RTY: 1 trade(s)
+    YM: 1 trade(s)
+  W/L: 2/3  WR: 40%  Net: +$28.50

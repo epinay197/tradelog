@@ -1,0 +1,91 @@
+V7 PULSE [07:02 ET]  Trades: 8  P&L: +$28.50
+──────────────────────────────────────────────────
+  NEW  09:37:20   YM SELL @ 46308.00  Z=965  ATR=27.98
+  NEW  09:43:20   NQ SELL @ 23830.75  Z=2442  ATR=7.32
+  NEW  09:49:19  RTY SELL @ 2485.80  Z=566  ATR=2.84
+  NEW  09:51:51   ES SELL @ 6541.25  Z=385  ATR=7.05
+  NEW  10:43:32   NQ SELL @ 23850.50  Z=1847  ATR=7.27
+  NEW  10:53:51   NQ SELL @ 23860.25  Z=2153  ATR=7.10
+  NEW  10:56:30   NQ SELL @ 23853.50  Z=2467  ATR=7.37
+  NEW  11:06:40   NQ SELL @ 23842.50  Z=2469  ATR=7.41
+  EXIT 09:44:02   NQ breakeven
+  EXIT 09:58:43   YM hard_stop
+  EXIT 10:30:04         loss  PnL=-31.50  Day=-31.50  WR=0%
+  EXIT 10:30:11         loss  PnL=-9.00  Day=-9.00  WR=0%
+  EXIT 10:46:15   NQ trail_stop
+  EXIT 10:54:25   NQ breakeven
+  EXIT 10:54:26          win  PnL=+11.50  Day=+11.50  WR=100%
+  EXIT 11:04:51   NQ trail_stop
+  EXIT 11:04:51          win  PnL=+18.00  Day=+29.50  WR=100%
+  EXIT 11:09:32   NQ breakeven
+  EXIT 11:09:32         loss  PnL=-1.00  Day=+28.50  WR=67%
+  LOAD 06:26:03 ? Slot=? ET=?
+  LOAD 06:26:08 ? Slot=? ET=?
+  LOAD 06:26:10 ? Slot=? ET=?
+  LOAD 06:26:10 ? Slot=? ET=?
+  LOAD 06:26:10 ? Slot=? ET=?
+  LOAD 06:26:12 ? Slot=? ET=?
+  LOAD 06:26:44 ? Slot=? ET=?
+  LOAD 06:33:49 ? Slot=? ET=?
+  LOAD 06:34:29 ? Slot=? ET=?
+  LOAD 06:34:29 ? Slot=? ET=?
+  LOAD 06:34:36 ? Slot=? ET=?
+  LOAD 06:34:38 ? Slot=? ET=?
+  LOAD 06:34:44 ? Slot=? ET=?
+  LOAD 06:34:45 ? Slot=? ET=?
+  LOAD 06:34:51 ? Slot=? ET=?
+  LOAD 06:46:27 ? Slot=? ET=?
+  LOAD 06:48:10 ? Slot=? ET=?
+  LOAD 06:48:11 ? Slot=? ET=?
+  LOAD 06:48:16 ? Slot=? ET=?
+  LOAD 06:48:18 ? Slot=? ET=?
+  LOAD 06:48:24 ? Slot=? ET=?
+  LOAD 06:48:36 ? Slot=? ET=?
+  LOAD 06:48:38 ? Slot=? ET=?
+  LOAD 10:38:55 ? Slot=? ET=?
+  LOAD 10:38:57 ? Slot=? ET=?
+  LOAD 10:39:03 ? Slot=? ET=?
+  LOAD 10:39:05 ? Slot=? ET=?
+  LOAD 10:39:12 ? Slot=? ET=?
+  LOAD 10:39:13 ? Slot=? ET=?
+  LOAD 10:39:20 ? Slot=? ET=?
+  LOAD 10:39:21 ? Slot=? ET=?
+  LOAD 10:46:11 ? Slot=? ET=?
+  LOAD 10:46:15 ? Slot=? ET=?
+  LOAD 10:46:21 ? Slot=? ET=?
+  LOAD 10:46:26 ? Slot=? ET=?
+  LOAD 10:46:32 ? Slot=? ET=?
+  LOAD 10:46:32 ? Slot=? ET=?
+  LOAD 10:46:32 ? Slot=? ET=?
+  LOAD 10:46:32 ? Slot=? ET=?
+  LOAD 11:12:54 ? Slot=? ET=?
+  LOAD 11:12:59 ? Slot=? ET=?
+  LOAD 11:13:04 ? Slot=? ET=?
+  LOAD 11:13:05 ? Slot=? ET=?
+  LOAD 11:13:11 ? Slot=? ET=?
+  LOAD 11:13:17 ? Slot=? ET=?
+  LOAD 12:22:10 YMM26_FUT_CME Slot=2 ET=622
+  LOAD 12:22:18 RTYM26_FUT_CME Slot=3 ET=622
+  LOAD 12:22:19 RTYM26_FUT_CME Slot=3 ET=622
+  LOAD 12:22:25 NQM26_FUT_CME Slot=0 ET=622
+  LOAD 12:22:31 ESM26_FUT_CME Slot=1 ET=622
+  LOAD 12:22:33 ESM26_FUT_CME Slot=1 ET=622
+  LOAD 12:29:53 RTYM26_FUT_CME Slot=3 ET=629
+  LOAD 12:29:53 NQM26_FUT_CME Slot=0 ET=629
+  LOAD 12:29:53 YMM26_FUT_CME Slot=2 ET=629
+  LOAD 12:29:53 ESM26_FUT_CME Slot=1 ET=629
+  LOAD 12:55:55 ESM26_FUT_CME Slot=1 ET=655
+  LOAD 12:56:00 NQM26_FUT_CME Slot=0 ET=656
+  LOAD 12:56:07 YMM26_FUT_CME Slot=2 ET=656
+  LOAD 12:56:13 RTYM26_FUT_CME Slot=3 ET=656
+  ⚠ 30 kill switch(es) fired
+
+SCOREBOARD
+──────────────────────────────────────────────────
+    ES: 1 trade(s)
+    NQ: 5 trade(s)
+   RTY: 1 trade(s)
+    YM: 1 trade(s)
+  W/L: 2/3  WR: 40%  Net: +$28.50
+
+  🔴 ALERT: Kill switch fired mid-session at 07:02 ET. Script may think it's outside session.

@@ -1,0 +1,128 @@
+{
+  "date": "2026-04-02",
+  "updated": "2026-04-02 13:03:03",
+  "daily_pnl": 28.5,
+  "fills": [
+    {
+      "time": "09:37:20",
+      "symbol": "YM",
+      "side": "SELL",
+      "price": 46308.0,
+      "z": 965.05,
+      "atr": 27.98,
+      "trade_num": 1
+    },
+    {
+      "time": "09:43:20",
+      "symbol": "NQ",
+      "side": "SELL",
+      "price": 23830.75,
+      "z": 2442.29,
+      "atr": 7.32,
+      "trade_num": 1
+    },
+    {
+      "time": "09:49:19",
+      "symbol": "RTY",
+      "side": "SELL",
+      "price": 2485.8,
+      "z": 566.34,
+      "atr": 2.84,
+      "trade_num": 1
+    },
+    {
+      "time": "09:51:51",
+      "symbol": "ES",
+      "side": "SELL",
+      "price": 6541.25,
+      "z": 385.38,
+      "atr": 7.05,
+      "trade_num": 1
+    },
+    {
+      "time": "10:43:32",
+      "symbol": "NQ",
+      "side": "SELL",
+      "price": 23850.5,
+      "z": 1846.64,
+      "atr": 7.27,
+      "trade_num": 1
+    },
+    {
+      "time": "10:53:51",
+      "symbol": "NQ",
+      "side": "SELL",
+      "price": 23860.25,
+      "z": 2152.96,
+      "atr": 7.1,
+      "trade_num": 1
+    },
+    {
+      "time": "10:56:30",
+      "symbol": "NQ",
+      "side": "SELL",
+      "price": 23853.5,
+      "z": 2467.14,
+      "atr": 7.37,
+      "trade_num": 2
+    },
+    {
+      "time": "11:06:40",
+      "symbol": "NQ",
+      "side": "SELL",
+      "price": 23842.5,
+      "z": 2469.2,
+      "atr": 7.41,
+      "trade_num": 3
+    }
+  ],
+  "exits": [
+    {
+      "time": "10:30:04",
+      "type": "loss",
+      "pnl": -31.5,
+      "day_pnl": -31.5,
+      "win_rate": 0
+    },
+    {
+      "time": "10:30:11",
+      "type": "loss",
+      "pnl": -9.0,
+      "day_pnl": -9.0,
+      "win_rate": 0
+    },
+    {
+      "time": "10:54:26",
+      "type": "win",
+      "pnl": 11.5,
+      "day_pnl": 11.5,
+      "win_rate": 100
+    },
+    {
+      "time": "11:04:51",
+      "type": "win",
+      "pnl": 18.0,
+      "day_pnl": 29.5,
+      "win_rate": 100
+    },
+    {
+      "time": "11:09:32",
+      "type": "loss",
+      "pnl": -1.0,
+      "day_pnl": 28.5,
+      "win_rate": 67
+    }
+  ],
+  "errors": [],
+  "shadow_blocks": {
+    "WARMUP": 10479,
+    "ADVERSE": 215,
+    "SPREAD": 6663,
+    "LOW_VOL": 257,
+    "VOL_GATE": 5901,
+    "MOMENTUM": 268,
+    "COOLDOWN": 357,
+    "QUEUE": 3613
+  },
+  "status": "active"
+}

@@ -3,3 +3,6 @@ sc_bridge.log
 synced_ids.json
 *.pyc
 __pycache__/
+.pulse_state.json
+pulse.log
+analytics.log
