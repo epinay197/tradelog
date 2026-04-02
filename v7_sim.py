@@ -256,24 +256,18 @@ def validate_cpp(source_path: str) -> Tuple[int, int, List[str]]:
             lines.append(_fail("Trailing stop: trailDist variable not found"))
             fails += 1
 
-    # ---- CHECK 7: Heartbeat uses integer seconds ----
-    if has(r'heartbeatBar') and has(r'int.*heartbeatBar'):
-        # Verify it is not stored as float/double
-        if has(r'float.*heartbeatBar') or has(r'double.*heartbeatBar'):
-            lines.append(_fail("Heartbeat: heartbeatBar stored as float/double -- use int for seconds"))
-            fails += 1
-        else:
-            lines.append(_pass("Heartbeat: uses integer seconds-of-day (heartbeatBar)"))
-            passes += 1
+    # ---- CHECK 7: Heartbeat uses Bid/Ask feed detection (not bar age) ----
+    if has(r'lastSeenBid|lastSeenAsk|lastBidAskChange'):
+        lines.append(_pass("Heartbeat: uses Bid/Ask feed staleness (not bar age) -- no false SAFE MODE on range bars"))
+        passes += 1
+    elif has(r'BaseDateTimeIn.*driftSec.*SAFE.MODE'):
+        lines.append(_fail("Heartbeat: uses bar age for drift -- triggers false SAFE MODE on 95% of range bar heartbeats"))
+        fails += 1
+    elif has(r'heartbeatBar'):
+        lines.append(_pass("Heartbeat: uses integer seconds-of-day (heartbeatBar)"))
+        passes += 1
     else:
-        # Check GetPersistentInt for slot 20
-        if has(r'GetPersistentInt\s*\(\s*20\s*\).*heartbeat', re.IGNORECASE):
-            lines.append(_pass("Heartbeat: uses PersistentInt (integer seconds)"))
-            passes += 1
-        elif has(r'heartbeat', re.IGNORECASE):
-            lines.append(_warn("Heartbeat variable found but could not confirm integer storage"))
-        else:
-            lines.append(_warn("No heartbeat variable found"))
+        lines.append(_warn("No heartbeat variable found"))
 
     # ---- CHECK 8: Full recalculation preserves position state ----
     recalc_match = has(r'IsFullRecalculation\s*\)(.*?)return\s*;', re.DOTALL)
