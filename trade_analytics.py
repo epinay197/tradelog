@@ -1228,23 +1228,41 @@ Consider sitting out the next session if streak reaches {count + 2}
 
 # ── Auto-open dashboard ────────────────────────────────────────────────────
 def open_dashboard(url, close_after=300):
-    """Open dashboard in browser, close the tab after close_after seconds."""
+    """Open dashboard in a new browser tab, close only that tab after close_after seconds."""
     try:
         import subprocess
         # Open URL in default browser
-        proc = subprocess.Popen(
+        subprocess.Popen(
             ["cmd", "/c", "start", "", url],
             shell=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
         )
-        log(f"Dashboard opened in browser (auto-close in {close_after // 60}m)")
-        # Schedule close after 5 minutes via a background PowerShell command
-        close_cmd = (
-            f'powershell -WindowStyle Hidden -Command "'
+        log(f"Dashboard opened in browser (auto-close tab in {close_after // 60}m)")
+        # After delay, find the browser window whose title contains 'TradeLog Analytics'
+        # and send Ctrl+W to close only the tab, not the whole browser
+        ps_script = (
             f'Start-Sleep -Seconds {close_after}; '
-            f"Get-Process | Where-Object {{$_.MainWindowTitle -like '*TradeLog Analytics*'}} | "
-            f'ForEach-Object {{ $_.CloseMainWindow() }}"'
+            f'Add-Type -AssemblyName System.Windows.Forms; '
+            f'$w = Get-Process | Where-Object {{$_.MainWindowTitle -like "*TradeLog Analytics*"}}; '
+            f'foreach ($p in $w) {{ '
+            f'  $h = $p.MainWindowHandle; '
+            f'  if ($h -ne 0) {{ '
+            f'    [void][System.Runtime.InteropServices.Marshal]; '
+            f'    Add-Type @" \n'
+            f'using System; using System.Runtime.InteropServices; \n'
+            f'public class WinAPI {{ \n'
+            f'  [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd); \n'
+            f'}} \n'
+            f'"@ -ErrorAction SilentlyContinue; '
+            f'    [WinAPI]::SetForegroundWindow($h); '
+            f'    Start-Sleep -Milliseconds 300; '
+            f'    [System.Windows.Forms.SendKeys]::SendWait("^w"); '
+            f'  }} '
+            f'}}'
         )
-        subprocess.Popen(close_cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.Popen(
+            ["powershell", "-WindowStyle", "Hidden", "-Command", ps_script],
+            shell=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
     except Exception as e:
         log(f"Browser open failed: {e}")
 
