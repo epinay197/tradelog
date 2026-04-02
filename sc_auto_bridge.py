@@ -1,6 +1,7 @@
 """
-sc_auto_bridge.py v2 — Sierra Chart TradeActivityLogs → GitHub
-Parses SC binary TradeActivityLog_*.data files, pairs FIFO round-trips, pushes trades.json
+sc_auto_bridge.py v3 — Sierra Chart TradeActivityLogs + V7 Predator Log → GitHub
+Parses SC binary TradeActivityLog_*.data files, pairs FIFO round-trips,
+enriches with V7 Predator Elite log metadata, pushes trades.json
 """
 import json, os, struct, glob, re, base64, hashlib, datetime, sys, argparse
 from zoneinfo import ZoneInfo
@@ -69,6 +70,401 @@ def meta(base):
         if base.startswith(k):
             return v
     return {"denom": 100, "pv": 5.0}
+
+# ── V7 Predator Log Parser ─────────────────────────────────────────────────
+_V7_LINE_RE = re.compile(
+    r'^\[(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2})\]\s+(V7_\w+)[:\s]+(.*)')
+
+_V7_FILL_RE = re.compile(
+    r'(BUY|SELL)\s+@\s+([\d.]+)\s+Z=([\d.+-]+)\s+ATR=([\d.]+)\s+#(\d+)\s+\[(\w+)\]')
+
+_V7_WIN_RE = re.compile(
+    r'#(\d+)\s+PnL=([+\-\d.]+)\s+Day=\$([+\-\d.]+)\s+WR=(\d+)%\s+Z=([\d.+-]+)\s+\[(\w+)\]')
+
+_V7_LOSS_RE = re.compile(
+    r'#(\d+)\s+PnL=([+\-\d.]+)\s+Day=\$([+\-\d.]+)\s+Consec=(\d+)\s+WR=(\d+)%\s+\[(\w+)\]')
+
+_V7_TRAIL_RE = re.compile(
+    r'peak=([+\-\d.]+)\s+dd=([\d.]+)\s+\[(\w+)\]')
+
+_V7_HARD_RE = re.compile(
+    r'loss=([+\-\d.]+)\s+limit=([+\-\d.]+)\s+\[(\w+)\]')
+
+_V7_BE_RE = re.compile(
+    r'peak=([+\-\d.]+)\s+now=([+\-\d.]+)\s+\[(\w+)\]')
+
+_V7_SHADOW_RE = re.compile(
+    r'^\[(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2})\]\s+BLOCKED\s+(\w+):\s+.*\[(\w+)\]')
+
+
+def parse_v7_log(log_path):
+    """
+    Parse V7_Predator_Log.txt into structured events.
+    Returns dict keyed by (date, base_symbol) → list of event dicts.
+    Each event: {type, time, side, price, z, atr, trade_num, pnl, exit_type, peak, dd, ...}
+    """
+    events = defaultdict(list)
+    if not os.path.isfile(log_path):
+        return events
+
+    with open(log_path, 'r', encoding='utf-8', errors='replace') as f:
+        for raw_line in f:
+            line = raw_line.strip()
+            m = _V7_LINE_RE.match(line)
+            if not m:
+                continue
+            date_str, time_str, tag, payload = m.groups()
+
+            if tag == 'V7_FILL':
+                fm = _V7_FILL_RE.search(payload)
+                if fm:
+                    sym_raw = fm.group(6)
+                    base = get_base(sym_raw)
+                    events[(date_str, base)].append({
+                        'type':      'FILL',
+                        'time':      time_str,
+                        'side':      fm.group(1),
+                        'price':     float(fm.group(2)),
+                        'z':         float(fm.group(3)),
+                        'atr':       float(fm.group(4)),
+                        'trade_num': int(fm.group(5)),
+                        'sym_raw':   sym_raw,
+                    })
+
+            elif tag == 'V7_WIN':
+                wm = _V7_WIN_RE.search(payload)
+                if wm:
+                    sym_raw = wm.group(6)
+                    base = get_base(sym_raw)
+                    events[(date_str, base)].append({
+                        'type':      'WIN',
+                        'time':      time_str,
+                        'trade_num': int(wm.group(1)),
+                        'pnl':       float(wm.group(2)),
+                        'day_pnl':   float(wm.group(3)),
+                        'win_rate':  int(wm.group(4)),
+                        'z':         float(wm.group(5)),
+                        'sym_raw':   sym_raw,
+                    })
+
+            elif tag == 'V7_LOSS':
+                lm = _V7_LOSS_RE.search(payload)
+                if lm:
+                    sym_raw = lm.group(6)
+                    base = get_base(sym_raw)
+                    events[(date_str, base)].append({
+                        'type':      'LOSS',
+                        'time':      time_str,
+                        'trade_num': int(lm.group(1)),
+                        'pnl':       float(lm.group(2)),
+                        'day_pnl':   float(lm.group(3)),
+                        'consec':    int(lm.group(4)),
+                        'win_rate':  int(lm.group(5)),
+                        'sym_raw':   sym_raw,
+                    })
+
+            elif tag == 'V7_TRAIL_STOP':
+                tm = _V7_TRAIL_RE.search(payload)
+                if tm:
+                    sym_raw = tm.group(3)
+                    base = get_base(sym_raw)
+                    events[(date_str, base)].append({
+                        'type':      'TRAIL_STOP',
+                        'time':      time_str,
+                        'peak':      float(tm.group(1)),
+                        'drawdown':  float(tm.group(2)),
+                        'sym_raw':   sym_raw,
+                    })
+
+            elif tag == 'V7_HARD_STOP':
+                hm = _V7_HARD_RE.search(payload)
+                if hm:
+                    sym_raw = hm.group(3)
+                    base = get_base(sym_raw)
+                    events[(date_str, base)].append({
+                        'type':      'HARD_STOP',
+                        'time':      time_str,
+                        'loss':      float(hm.group(1)),
+                        'limit':     float(hm.group(2)),
+                        'sym_raw':   sym_raw,
+                    })
+
+            elif tag == 'V7_BE_GUARD':
+                bm = _V7_BE_RE.search(payload)
+                if bm:
+                    sym_raw = bm.group(3)
+                    base = get_base(sym_raw)
+                    events[(date_str, base)].append({
+                        'type':      'BE_GUARD',
+                        'time':      time_str,
+                        'peak':      float(bm.group(1)),
+                        'now':       float(bm.group(2)),
+                        'sym_raw':   sym_raw,
+                    })
+
+    return events
+
+
+def parse_v7_shadow(shadow_path):
+    """
+    Parse V7_Shadow_Log.txt — count blocked signals per (date, base_symbol, reason).
+    Returns dict keyed by (date, base) → {reason: count, ...}
+    """
+    counts = defaultdict(lambda: defaultdict(int))
+    if not os.path.isfile(shadow_path):
+        return counts
+
+    with open(shadow_path, 'r', encoding='utf-8', errors='replace') as f:
+        for raw_line in f:
+            m = _V7_SHADOW_RE.match(raw_line.strip())
+            if m:
+                date_str, _, reason, sym_raw = m.groups()
+                base = get_base(sym_raw)
+                counts[(date_str, base)][reason] += 1
+
+    return counts
+
+
+def _time_to_minutes(t_str):
+    """'HH:MM:SS' or 'HH:MM' → minutes since midnight."""
+    parts = t_str.split(':')
+    return int(parts[0]) * 60 + int(parts[1])
+
+
+def enrich_with_v7(trades, v7_events, v7_shadow):
+    """
+    Match V7 log events to paired SC trades by (date, base_symbol).
+    Enriches each trade dict in-place with V7 metadata fields.
+    """
+    for trade in trades:
+        date = trade['date']
+        # Derive base from the trade symbol (e.g. NQM26 → NQ)
+        base = get_base(trade.get('symbol', ''))
+        key = (date, base)
+
+        evts = v7_events.get(key, [])
+        shadow = v7_shadow.get(key, {})
+
+        # Find FILL events that could match this trade's entry time window
+        entry_mins = _time_to_minutes(trade.get('time', '00:00'))
+        exit_mins = _time_to_minutes(trade.get('exitTime', '00:00'))
+
+        # Collect V7 fills within ±3 min of entry time
+        matched_fills = []
+        for e in evts:
+            if e['type'] == 'FILL':
+                fill_mins = _time_to_minutes(e['time'])
+                if abs(fill_mins - entry_mins) <= 3:
+                    matched_fills.append(e)
+
+        # Collect exit events (WIN/LOSS/TRAIL/HARD/BE) within ±3 min of exit time
+        matched_exits = []
+        for e in evts:
+            if e['type'] in ('WIN', 'LOSS', 'TRAIL_STOP', 'HARD_STOP', 'BE_GUARD'):
+                evt_mins = _time_to_minutes(e['time'])
+                if abs(evt_mins - exit_mins) <= 3:
+                    matched_exits.append(e)
+
+        # Pick best fill match (closest to entry time)
+        best_fill = None
+        if matched_fills:
+            best_fill = min(matched_fills,
+                            key=lambda e: abs(_time_to_minutes(e['time']) - entry_mins))
+
+        # Determine exit type from matched exit events
+        exit_type = ""
+        v7_peak = None
+        v7_exit_z = None
+        for e in matched_exits:
+            if e['type'] == 'TRAIL_STOP':
+                exit_type = "trail_stop"
+                v7_peak = e.get('peak')
+            elif e['type'] == 'HARD_STOP':
+                exit_type = "hard_stop"
+            elif e['type'] == 'BE_GUARD':
+                exit_type = "breakeven"
+                v7_peak = e.get('peak')
+            elif e['type'] == 'WIN':
+                if not exit_type:
+                    exit_type = "win"
+                v7_exit_z = e.get('z')
+                v7_peak = None  # WIN may not have peak
+            elif e['type'] == 'LOSS':
+                if not exit_type:
+                    exit_type = "loss"
+
+        # Also scan for peak from trail/BE events anywhere in the trade window
+        for e in evts:
+            if e['type'] in ('TRAIL_STOP', 'BE_GUARD'):
+                evt_mins = _time_to_minutes(e['time'])
+                if entry_mins <= evt_mins <= exit_mins + 1:
+                    if v7_peak is None or e.get('peak', 0) > v7_peak:
+                        v7_peak = e.get('peak')
+
+        # Enrich trade with V7 fields
+        v7_data = {}
+        if best_fill:
+            v7_data['v7_z_entry'] = best_fill.get('z')
+            v7_data['v7_atr'] = best_fill.get('atr')
+            v7_data['v7_entry_side'] = best_fill.get('side')
+            v7_data['v7_trade_num'] = best_fill.get('trade_num')
+        if exit_type:
+            v7_data['v7_exit_type'] = exit_type
+        if v7_exit_z is not None:
+            v7_data['v7_exit_z'] = v7_exit_z
+        if v7_peak is not None:
+            v7_data['v7_peak_unreal'] = v7_peak
+        if shadow:
+            v7_data['v7_signals_blocked'] = dict(shadow)
+
+        # Auto-tag setup from V7 if not already tagged
+        if not trade.get('setup') and best_fill:
+            z_val = best_fill.get('z', 0)
+            if abs(z_val) > 3.0:
+                trade['setup'] = 'V7-Momentum'
+            elif abs(z_val) > 2.0:
+                trade['setup'] = 'V7-Signal'
+
+        # Merge v7 into trade
+        if v7_data:
+            trade['v7'] = v7_data
+            trade['source'] = 'auto+v7'
+
+    return trades
+
+
+def build_v7_trades(v7_events, v7_shadow, comm_per_contract=4.0):
+    """
+    Build complete trade records purely from V7 log data.
+    Used when SC binary TradeActivityLogs have no fills (V7 is the order source).
+    Pairs V7_FILL entries with subsequent WIN/LOSS/exit events by trade_num + symbol.
+    """
+    trades = []
+    for (date_str, base), evts in v7_events.items():
+        fills = [e for e in evts if e['type'] == 'FILL']
+        exits = [e for e in evts if e['type'] in ('WIN', 'LOSS')]
+        exit_events = [e for e in evts if e['type'] in
+                       ('TRAIL_STOP', 'HARD_STOP', 'BE_GUARD')]
+
+        # Group by trade_num
+        for fill in fills:
+            tnum = fill.get('trade_num', 0)
+            sym_raw = fill.get('sym_raw', '')
+
+            # Find matching exit (WIN or LOSS with same trade_num)
+            matched_exit = None
+            for ex in exits:
+                if ex.get('trade_num') == tnum:
+                    matched_exit = ex
+                    break
+
+            # Find exit mechanism (TRAIL/HARD/BE closest after fill time)
+            fill_mins = _time_to_minutes(fill['time'])
+            exit_mechanism = ""
+            peak_unreal = None
+            exit_time_str = fill['time']  # fallback
+
+            if matched_exit:
+                exit_time_str = matched_exit['time']
+                exit_mins = _time_to_minutes(exit_time_str)
+            else:
+                exit_mins = fill_mins + 60  # assume 1hr max if no exit found
+
+            for ee in exit_events:
+                ee_mins = _time_to_minutes(ee['time'])
+                if fill_mins <= ee_mins <= exit_mins + 1:
+                    if ee['type'] == 'TRAIL_STOP':
+                        exit_mechanism = 'trail_stop'
+                        peak_unreal = ee.get('peak')
+                    elif ee['type'] == 'HARD_STOP':
+                        exit_mechanism = 'hard_stop'
+                    elif ee['type'] == 'BE_GUARD':
+                        exit_mechanism = 'breakeven'
+                        peak_unreal = ee.get('peak')
+
+            # Determine side and compute exit price from PnL
+            side_str = fill['side']  # BUY or SELL from V7
+            entry_price = fill['price']
+            m = meta(base)
+            pv = m['pv']
+
+            if matched_exit:
+                pnl = matched_exit.get('pnl', 0)
+                # Back-compute exit price: pnl = (exit - entry) * pv * direction
+                direction = -1 if side_str == 'SELL' else 1
+                if pv > 0:
+                    exit_price = entry_price + (pnl / (pv * 1))  # qty=1 for V7
+                else:
+                    exit_price = entry_price
+                is_win = matched_exit['type'] == 'WIN'
+                if not exit_mechanism:
+                    exit_mechanism = 'win' if is_win else 'loss'
+            else:
+                exit_price = entry_price
+                pnl = 0
+                is_win = False
+
+            gross_pnl = pnl
+            commission = comm_per_contract * 1  # V7 trades 1 contract
+            net_pnl = gross_pnl - commission
+
+            clean_sym = re.sub(r'_FUT_\w+$', '', sym_raw)
+            trade_side = "Short" if side_str == "SELL" else "Long"
+
+            # Entry/exit times — V7 log times are in local/CEST, convert display
+            entry_hm = fill['time'][:5]  # HH:MM
+            exit_hm = exit_time_str[:5] if matched_exit else entry_hm
+
+            duration = max(0, _time_to_minutes(exit_hm) - _time_to_minutes(entry_hm))
+
+            trade_id = hashlib.md5(
+                f"{sym_raw}{date_str}{entry_price:.4f}{tnum}v7".encode()
+            ).hexdigest()[:12]
+
+            # Z-score setup tag
+            z_val = fill.get('z', 0)
+            setup = 'V7-Momentum' if abs(z_val) > 3.0 else 'V7-Signal'
+
+            shadow = v7_shadow.get((date_str, base), {})
+
+            v7_data = {
+                'v7_z_entry': fill.get('z'),
+                'v7_atr': fill.get('atr'),
+                'v7_entry_side': side_str,
+                'v7_trade_num': tnum,
+                'v7_exit_type': exit_mechanism,
+            }
+            if matched_exit and matched_exit['type'] == 'WIN':
+                v7_data['v7_exit_z'] = matched_exit.get('z')
+            if peak_unreal is not None:
+                v7_data['v7_peak_unreal'] = peak_unreal
+            if shadow:
+                v7_data['v7_signals_blocked'] = dict(shadow)
+
+            trades.append({
+                "id":          trade_id,
+                "date":        date_str,
+                "time":        entry_hm,
+                "symbol":      clean_sym,
+                "side":        trade_side,
+                "qty":         1,
+                "entryPrice":  round(entry_price, 4),
+                "exitPrice":   round(exit_price, 4),
+                "grossPnl":    round(gross_pnl, 2),
+                "commission":  round(commission, 2),
+                "netPnl":      round(net_pnl, 2),
+                "exitTime":    exit_hm,
+                "duration":    duration,
+                "rMultiple":   0,
+                "grade":       "",
+                "setup":       setup,
+                "notes":       "",
+                "source":      "v7",
+                "v7":          v7_data,
+            })
+
+    return sorted(trades, key=lambda t: (t['date'], t['time']))
+
 
 # ── SC timestamp decoder ───────────────────────────────────────────────────
 # SC stores datetimes as microseconds since December 30, 1899 UTC
@@ -327,7 +723,7 @@ def main():
         if not in_market_window():
             sys.exit(0)
 
-    log("=== SC Bridge v2 (binary TradeActivityLogs) ===")
+    log("=== SC Bridge v3 (binary TradeActivityLogs + V7 Predator) ===")
     cfg = load_config()
 
     sc_dir   = cfg.get("sc_dir", "")
@@ -381,11 +777,76 @@ def main():
     new_trades = pair_fills(all_fills, comm)
     log(f"Paired into {len(new_trades)} round-trip trades")
 
+    # ── V7 Predator log enrichment ──────────────────────────────
+    v7_log_path = cfg.get("v7_log", os.path.join(
+        sc_parent, "V7_Predator_Log.txt"))
+    v7_shadow_path = cfg.get("v7_shadow_log", os.path.join(
+        sc_parent, "V7_Shadow_Log.txt"))
+
+    v7_events = parse_v7_log(v7_log_path)
+    v7_shadow = parse_v7_shadow(v7_shadow_path)
+
+    if v7_events:
+        log(f"V7 log: {sum(len(v) for v in v7_events.values())} events across "
+            f"{len(v7_events)} symbol-days")
+    else:
+        log("V7 log: no events found (file missing or empty)")
+    if v7_shadow:
+        total_blocked = sum(sum(r.values()) for r in v7_shadow.values())
+        log(f"V7 shadow: {total_blocked} blocked signals across "
+            f"{len(v7_shadow)} symbol-days")
+
+    new_trades = enrich_with_v7(new_trades, v7_events, v7_shadow)
+    v7_enriched = sum(1 for t in new_trades if 'v7' in t)
+    log(f"V7 enrichment: {v7_enriched}/{len(new_trades)} SC trades matched")
+
+    # Build standalone V7 trades for dates/symbols with no SC binary fills
+    if v7_events:
+        v7_only_trades = build_v7_trades(v7_events, v7_shadow, comm)
+        # Deduplicate: skip V7 trades that overlap with SC-paired trades (same date+base+time±3min)
+        sc_keys = set()
+        for t in new_trades:
+            base = get_base(t.get('symbol', ''))
+            sc_keys.add((t['date'], base, _time_to_minutes(t.get('time', '00:00'))))
+        added_v7 = []
+        for vt in v7_only_trades:
+            base = get_base(vt.get('symbol', ''))
+            vt_mins = _time_to_minutes(vt.get('time', '00:00'))
+            # Check if any SC trade is within ±3 min
+            overlap = any(abs(vt_mins - m) <= 3
+                          for (d, b, m) in sc_keys
+                          if d == vt['date'] and b == base)
+            if not overlap:
+                added_v7.append(vt)
+        if added_v7:
+            new_trades.extend(added_v7)
+            new_trades.sort(key=lambda t: (t['date'], t['time']))
+            log(f"V7 standalone trades: {len(added_v7)} (no SC binary match)")
+        else:
+            log("V7 standalone trades: 0 (all covered by SC fills)")
+
     existing, sha = get_existing_trades(cfg)
     existing_ids = {t["id"] for t in existing if "id" in t}
     added = [t for t in new_trades if t["id"] not in existing_ids]
 
+    # Re-enrich existing trades that don't yet have V7 data
+    if v7_events:
+        stale = [t for t in existing if 'v7' not in t]
+        if stale:
+            enrich_with_v7(stale, v7_events, v7_shadow)
+            re_enriched = sum(1 for t in stale if 'v7' in t)
+            if re_enriched:
+                log(f"V7 re-enriched {re_enriched} existing trades")
+
     if not added:
+        # Even with no new trades, push if we re-enriched existing ones
+        re_enriched_any = v7_events and any('v7' in t for t in existing
+                                            if t.get('source') != 'auto+v7')
+        if re_enriched_any:
+            if put_trades(cfg, existing, sha):
+                log(f"Pushed V7 enrichment for existing trades ({len(existing)} total)")
+                notify("TradeLog", "V7 enrichment synced.")
+            return
         log("No new trades to sync.")
         notify("TradeLog", "Up to date.")
         return
