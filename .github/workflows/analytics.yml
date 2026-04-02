@@ -1,0 +1,57 @@
+name: TradeLog Analytics
+
+on:
+  schedule:
+    # Every 15 min, Mon-Fri — GitHub cron is UTC; covers 04:15-16:15 ET window
+    # Python-side gate handles the exact ET boundaries
+    - cron: '*/15 8-21 * * 1-5'
+    # Saturday weekly digest at 9:00 AM ET (~13:00-14:00 UTC)
+    - cron: '0 13 * * 6'
+  workflow_dispatch:  # Manual trigger from GitHub UI
+
+jobs:
+  analytics:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Determine run mode
+        id: mode
+        run: |
+          DOW=$(date -u +%u)
+          if [ "$DOW" = "6" ]; then
+            echo "args=--weekly --force" >> "$GITHUB_OUTPUT"
+          else
+            echo "args=--force" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run analytics
+        env:
+          GH_TOKEN_PUSH: ${{ secrets.GH_TOKEN }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_APP_PASSWORD: ${{ secrets.SMTP_APP_PASSWORD }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+        run: |
+          python -c "
+          import json, os
+          cfg = {
+              'gh_owner': '${{ github.repository_owner }}',
+              'gh_repo': '${{ github.event.repository.name }}',
+              'gh_token': os.environ['GH_TOKEN_PUSH'],
+              'gh_branch': 'main',
+              'smtp_user': os.environ.get('SMTP_USER', ''),
+              'smtp_app_password': os.environ.get('SMTP_APP_PASSWORD', ''),
+              'email_to': os.environ.get('EMAIL_TO', ''),
+          }
+          with open('config.json', 'w') as f:
+              json.dump(cfg, f, indent=2)
+          "
+          python trade_analytics.py ${{ steps.mode.outputs.args }}
+
+      - name: Cleanup config
+        if: always()
+        run: rm -f config.json

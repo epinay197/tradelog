@@ -1356,7 +1356,8 @@ def main():
             dashboard_url = f"https://{cfg['gh_owner']}.github.io/{cfg['gh_repo']}/analytics.html"
             send_email(cfg, analytics, dashboard_url)
             send_loss_alert(cfg, overall)
-            open_dashboard(dashboard_url)
+            if not os.environ.get("GITHUB_ACTIONS"):
+                open_dashboard(dashboard_url)
         else:
             log(f"ERROR: push failed (json={'OK' if ok1 else 'FAIL'}, html={'OK' if ok2 else 'FAIL'})")
             notify("TradeLog Analytics ERROR", "Push failed — check analytics.log")
