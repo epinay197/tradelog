@@ -340,6 +340,18 @@ def validate_cpp(source_path: str) -> Tuple[int, int, List[str]]:
             lines.append(_info(f"Slot assignments: {slot_assignments} (expected {expected})"))
             passes += 1  # Info only, not a failure unless wrong
 
+    # ---- CHECK 13: Dollar cap has CurrencyValuePerTick fallback ----
+    # If sc.CurrencyValuePerTick is 0 (common for full-size CME contracts),
+    # the dollar cap silently does nothing and stops are ATR-only (too wide).
+    if has(r'CurrencyValuePerTick\s*<=\s*0') or has(r'cvpt\s*<=\s*0'):
+        lines.append(_pass("Dollar cap: has CurrencyValuePerTick fallback (SLOT_CVPT)"))
+        passes += 1
+    elif has(r'CurrencyValuePerTick\s*>\s*0\.0f.*maxStopPts'):
+        lines.append(_fail("Dollar cap: NO fallback when CurrencyValuePerTick=0 -- stop cap SILENTLY DISABLED for full-size contracts"))
+        fails += 1
+    else:
+        lines.append(_info("Dollar cap: could not determine CurrencyValuePerTick handling"))
+
     return passes, fails, lines
 
 
