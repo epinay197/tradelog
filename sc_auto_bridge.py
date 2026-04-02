@@ -323,7 +323,7 @@ def main():
     parser.add_argument("--force", action="store_true", help="Run regardless of time/day")
     args = parser.parse_args()
 
-    if not args.force and not sys.stdin.isatty():
+    if not args.force:
         if not in_market_window():
             sys.exit(0)
 

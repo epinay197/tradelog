@@ -1275,8 +1275,9 @@ def main():
     parser.add_argument("--json", action="store_true", help="Print JSON to stdout, no push")
     args = parser.parse_args()
 
-    if not args.force and not sys.stdin.isatty():
+    if not args.force:
         if not in_market_window():
+            log("Outside market window (04:15-16:15 ET weekdays). Use --force to override.")
             sys.exit(0)
 
     log("=== TradeLog Analytics Engine ===")
