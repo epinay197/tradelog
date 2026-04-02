@@ -2,10 +2,9 @@ name: TradeLog Analytics
 
 on:
   schedule:
-    # Every 15 min, Mon-Fri — GitHub cron is UTC; covers 04:15-16:15 ET window
-    # Python-side gate handles the exact ET boundaries
-    - cron: '*/15 8-21 * * 1-5'
-    # Saturday weekly digest at 9:00 AM ET (~13:00-14:00 UTC)
+    # Hourly, Mon-Fri — GitHub cron is UTC; Python-side gate enforces 04:15-16:15 ET
+    - cron: '15 8-21 * * 1-5'
+    # Saturday weekly digest at 9:00 AM ET (~13:00-14:00 UTC depending on DST)
     - cron: '0 13 * * 6'
   workflow_dispatch:  # Manual trigger from GitHub UI
 
@@ -26,7 +25,7 @@ jobs:
           if [ "$DOW" = "6" ]; then
             echo "args=--weekly --force" >> "$GITHUB_OUTPUT"
           else
-            echo "args=--force" >> "$GITHUB_OUTPUT"
+            echo "args=" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Run analytics
