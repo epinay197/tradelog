@@ -352,6 +352,30 @@ def validate_cpp(source_path: str) -> Tuple[int, int, List[str]]:
     else:
         lines.append(_info("Dollar cap: could not determine CurrencyValuePerTick handling"))
 
+    # ---- CHECK 14: Z-score uses residual stddev (Close-VWAP), not stddev(Close) ----
+    # On range bars, stddev(Close) is tiny → Z = 400-2600 → zero selectivity.
+    # Must compute stddev on the (Close - VWAP) residual series.
+    if has(r'sc\.Close\[k\]\s*-\s*vwapArray\[k\]') or has(r'Close.*-.*vwap.*sumResid'):
+        lines.append(_pass("Z-score: uses residual stddev (Close-VWAP) -- proper selectivity on range bars"))
+        passes += 1
+    elif has(r'sc\.StdDeviation\s*\(\s*sc\.Close'):
+        lines.append(_fail("Z-score: stddev computed on Close (not Close-VWAP) -- Z=400-2600 on range bars, zero entry selectivity"))
+        fails += 1
+    else:
+        lines.append(_warn("Z-score stddev method could not be determined"))
+
+    # ---- CHECK 15: PnL conversion when CurrencyValuePerTick=0 ----
+    # LastTradeProfitLoss returns points (not $) when CVPT=0.
+    # Must convert to dollars for daily loss limit, equity curve, Kelly.
+    if has(r'LastTradeProfitLoss.*SLOT_CVPT|closedPnL\s*\*=.*cvpt'):
+        lines.append(_pass("PnL tracking: dollar conversion when CurrencyValuePerTick=0"))
+        passes += 1
+    elif has(r'LastTradeProfitLoss') and not has(r'closedPnL\s*\*='):
+        lines.append(_fail("PnL tracking: no dollar conversion when CurrencyValuePerTick=0 -- daily loss limit/equity curve/Kelly all broken"))
+        fails += 1
+    else:
+        lines.append(_warn("PnL tracking method could not be determined"))
+
     return passes, fails, lines
 
 
