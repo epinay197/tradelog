@@ -370,6 +370,33 @@ def validate_cpp(source_path: str) -> Tuple[int, int, List[str]]:
     else:
         lines.append(_warn("PnL tracking method could not be determined"))
 
+    # ---- CHECK 16: Hurst Exponent regime filter ----
+    if has(r'hurstH') and has(r'BLOCKED\s+HURST_TREND'):
+        hurst_len = has(r'In_HurstLen.*?SetInt\s*\(\s*(\d+)')
+        hurst_thresh = has(r'In_HurstMaxTrend.*?SetFloat\s*\(\s*([\d.]+)')
+        hlen = int(hurst_len.group(1)) if hurst_len else 0
+        hthr = float(hurst_thresh.group(1)) if hurst_thresh else 0
+        lines.append(_pass(f"Hurst regime filter: len={hlen} threshold={hthr} (blocks trending markets)"))
+        passes += 1
+    else:
+        lines.append(_info("Hurst regime filter not found (optional)"))
+
+    # ---- CHECK 17: Time-of-day volume normalization ----
+    if has(r'volRatio') and has(r'effectiveZ.*volBoost|volBoost.*effectiveZ'):
+        lines.append(_pass("Volume normalization: effectiveZ adjusted by time-of-day volume ratio"))
+        passes += 1
+    elif has(r'volRatio'):
+        lines.append(_warn("volRatio computed but not applied to effectiveZ"))
+    else:
+        lines.append(_info("Volume normalization not found (optional)"))
+
+    # ---- CHECK 18: Order flow absorption confirmation ----
+    if has(r'BLOCKED\s+ABSORPTION') and has(r'BidVolume.*AskVolume|sumBidVol.*sumAskVol'):
+        lines.append(_pass("Absorption gate: order flow confirmation before entry (bid/ask volume ratio)"))
+        passes += 1
+    else:
+        lines.append(_info("Absorption gate not found (optional)"))
+
     return passes, fails, lines
 
 
