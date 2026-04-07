@@ -738,5 +738,25 @@
     "setup": "",
     "notes": "",
     "source": "auto"
+  },
+  {
+    "id": "62fa98527edc",
+    "date": "2026-04-06",
+    "time": "12:08",
+    "symbol": "MNQM26",
+    "side": "Long",
+    "qty": 144,
+    "entryPrice": 24301.1667,
+    "exitPrice": 24323.3333,
+    "grossPnl": 6384.0,
+    "commission": 576.0,
+    "netPnl": 5808.0,
+    "exitTime": "13:31",
+    "duration": 83,
+    "rMultiple": 0,
+    "grade": "",
+    "setup": "",
+    "notes": "\b \b \b \b \b \b \b \b \b \b \b \b",
+    "source": "auto"
   }
 ]
