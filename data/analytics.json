@@ -1,39 +1,39 @@
 {
-  "generated_at": "2026-04-07 05:15 ET",
-  "trade_count": 37,
+  "generated_at": "2026-04-07 05:19 ET",
+  "trade_count": 38,
   "overall": {
-    "trades": 37,
-    "winners": 22,
+    "trades": 38,
+    "winners": 23,
     "losers": 15,
     "breakeven": 0,
-    "win_rate": 59.5,
-    "total_pnl": 2999.63,
-    "avg_pnl": 81.07,
-    "avg_win": 1489.23,
+    "win_rate": 60.5,
+    "total_pnl": 8807.63,
+    "avg_pnl": 231.78,
+    "avg_win": 1677.0,
     "avg_loss": -1984.22,
     "largest_win": 10094.8,
     "largest_loss": -9120.97,
-    "expectancy": 81.07,
-    "profit_factor": 1.1,
+    "expectancy": 231.78,
+    "profit_factor": 1.3,
     "max_win_streak": 6,
     "max_loss_streak": 5,
-    "current_streak": "3L"
+    "current_streak": "1W"
   },
   "by_setup": [
     {
-      "trades": 37,
-      "winners": 22,
+      "trades": 38,
+      "winners": 23,
       "losers": 15,
       "breakeven": 0,
-      "win_rate": 59.5,
-      "total_pnl": 2999.63,
-      "avg_pnl": 81.07,
-      "avg_win": 1489.23,
+      "win_rate": 60.5,
+      "total_pnl": 8807.63,
+      "avg_pnl": 231.78,
+      "avg_win": 1677.0,
       "avg_loss": -1984.22,
       "largest_win": 10094.8,
       "largest_loss": -9120.97,
-      "expectancy": 81.07,
-      "profit_factor": 1.1,
+      "expectancy": 231.78,
+      "profit_factor": 1.3,
       "setup": "Unclassified"
     }
   ],
@@ -71,19 +71,19 @@
       "block": "10:30-11:30"
     },
     {
-      "trades": 2,
-      "winners": 1,
+      "trades": 3,
+      "winners": 2,
       "losers": 1,
       "breakeven": 0,
-      "win_rate": 50.0,
-      "total_pnl": -5773.77,
-      "avg_pnl": -2886.88,
-      "avg_win": 3347.2,
+      "win_rate": 66.7,
+      "total_pnl": 34.23,
+      "avg_pnl": 11.41,
+      "avg_win": 4577.6,
       "avg_loss": -9120.97,
-      "largest_win": 3347.2,
+      "largest_win": 5808.0,
       "largest_loss": -9120.97,
-      "expectancy": -2886.88,
-      "profit_factor": 0.37,
+      "expectancy": 11.41,
+      "profit_factor": 1.0,
       "block": "11:30-12:30"
     },
     {
@@ -185,19 +185,19 @@
   ],
   "by_day_of_week": [
     {
-      "trades": 9,
-      "winners": 6,
+      "trades": 10,
+      "winners": 7,
       "losers": 3,
       "breakeven": 0,
-      "win_rate": 66.7,
-      "total_pnl": 11502.85,
-      "avg_pnl": 1278.09,
-      "avg_win": 2458.04,
+      "win_rate": 70.0,
+      "total_pnl": 17310.85,
+      "avg_pnl": 1731.08,
+      "avg_win": 2936.61,
       "avg_loss": -1081.8,
       "largest_win": 10094.8,
       "largest_loss": -1710.24,
-      "expectancy": 1278.09,
-      "profit_factor": 4.54,
+      "expectancy": 1731.08,
+      "profit_factor": 6.33,
       "day": "Monday"
     },
     {
@@ -267,6 +267,22 @@
   ],
   "by_symbol": [
     {
+      "trades": 27,
+      "winners": 17,
+      "losers": 10,
+      "breakeven": 0,
+      "win_rate": 63.0,
+      "total_pnl": 7317.46,
+      "avg_pnl": 271.02,
+      "avg_win": 1986.23,
+      "avg_loss": -2644.85,
+      "largest_win": 10094.8,
+      "largest_loss": -9120.97,
+      "expectancy": 271.02,
+      "profit_factor": 1.28,
+      "symbol": "MNQ"
+    },
+    {
       "trades": 3,
       "winners": 2,
       "losers": 1,
@@ -281,22 +297,6 @@
       "expectancy": 872.39,
       "profit_factor": 6.65,
       "symbol": "M2K"
-    },
-    {
-      "trades": 26,
-      "winners": 16,
-      "losers": 10,
-      "breakeven": 0,
-      "win_rate": 61.5,
-      "total_pnl": 1509.46,
-      "avg_pnl": 58.06,
-      "avg_win": 1747.37,
-      "avg_loss": -2644.85,
-      "largest_win": 10094.8,
-      "largest_loss": -9120.97,
-      "expectancy": 58.06,
-      "profit_factor": 1.06,
-      "symbol": "MNQ"
     },
     {
       "trades": 4,
@@ -333,19 +333,19 @@
   ],
   "by_side": {
     "Long": {
-      "trades": 16,
-      "winners": 9,
+      "trades": 17,
+      "winners": 10,
       "losers": 7,
       "breakeven": 0,
-      "win_rate": 56.2,
-      "total_pnl": -7075.53,
-      "avg_pnl": -442.22,
-      "avg_win": 1054.02,
+      "win_rate": 58.8,
+      "total_pnl": -1267.53,
+      "avg_pnl": -74.56,
+      "avg_win": 1529.42,
       "avg_loss": -2365.96,
-      "largest_win": 2832.0,
+      "largest_win": 5808.0,
       "largest_loss": -9120.97,
-      "expectancy": -442.22,
-      "profit_factor": 0.57
+      "expectancy": -74.56,
+      "profit_factor": 0.92
     },
     "Short": {
       "trades": 21,
@@ -369,20 +369,20 @@
       206.18
     ],
     "worst_hour": [
-      "11:30-12:30",
-      -2886.88
+      "09:30-10:30",
+      -275.0
     ],
     "best_setup": [
       "Unclassified",
-      81.07
+      231.78
     ],
     "worst_setup": [
       "Unclassified",
-      81.07
+      231.78
     ],
     "best_day": [
       "Monday",
-      1278.09
+      1731.08
     ],
     "worst_day": [
       "Wednesday",
@@ -394,30 +394,49 @@
       "losers": 6,
       "breakeven": 0,
       "win_rate": 40.0,
-      "total_pnl": -9393.29,
-      "avg_pnl": -939.33,
-      "avg_win": 534.11,
+      "total_pnl": -3881.0,
+      "avg_pnl": -388.1,
+      "avg_win": 1912.18,
       "avg_loss": -1921.62,
-      "largest_win": 1474.68,
+      "largest_win": 5808.0,
       "largest_loss": -8214.89,
-      "expectancy": -939.33,
-      "profit_factor": 0.19
+      "expectancy": -388.1,
+      "profit_factor": 0.66
     },
     "losing_blocks": [
       [
         "09:30-10:30",
         -3024.95,
         11
-      ],
-      [
-        "11:30-12:30",
-        -5773.77,
-        2
       ]
     ]
   },
   "duration": {
-    "has_data": false
+    "has_data": true,
+    "avg_duration_all": 83.0,
+    "avg_duration_wins": 83.0,
+    "avg_duration_losses": 0,
+    "shortest": 83,
+    "longest": 83,
+    "by_bucket": [
+      {
+        "trades": 1,
+        "winners": 1,
+        "losers": 0,
+        "breakeven": 0,
+        "win_rate": 100.0,
+        "total_pnl": 5808.0,
+        "avg_pnl": 5808.0,
+        "avg_win": 5808.0,
+        "avg_loss": 0,
+        "largest_win": 5808.0,
+        "largest_loss": 5808.0,
+        "expectancy": 5808.0,
+        "profit_factor": 999.99,
+        "bucket": "1-2 hrs",
+        "avg_duration": 83.0
+      }
+    ]
   },
   "equity_curve": {
     "curve": [
@@ -753,15 +772,24 @@
         "symbol": "MESH26",
         "side": "Long",
         "drawdown": 10818.11
+      },
+      {
+        "date": "2026-04-06",
+        "time": "12:08",
+        "pnl": 5808.0,
+        "cumulative": 8807.63,
+        "symbol": "MNQM26",
+        "side": "Long",
+        "drawdown": 5010.11
       }
     ],
     "max_drawdown": 10891.76,
-    "final_equity": 2999.63
+    "final_equity": 8807.63
   },
   "r_multiples": {
     "has_data": true,
     "one_r": 1984.22,
-    "avg_r": 0.04,
+    "avg_r": 0.12,
     "best_r": 5.09,
     "worst_r": -4.6,
     "trades": [
@@ -1023,14 +1051,20 @@
         "symbol": "MESH26",
         "pnl": -586.0,
         "r": -0.3
+      },
+      {
+        "date": "2026-04-06",
+        "time": "12:08",
+        "symbol": "MNQM26",
+        "pnl": 5808.0,
+        "r": 2.93
       }
     ]
   },
-  "summary": "Across 37 trades, win rate is 59.5% with an expectancy of $+81.07 per trade. Total net P&L: $+2,999.63. Profit factor: 1.10. Best performing hour: Pre-market (avg $+206.18). Worst performing hour: 11:30-12:30 (avg $-2886.88). Last 10 trades: 40.0% win rate (below baseline). Current streak: 3L.",
+  "summary": "Across 38 trades, win rate is 60.5% with an expectancy of $+231.78 per trade. Total net P&L: $+8,807.63. Profit factor: 1.30. Best performing hour: Pre-market (avg $+206.18). Worst performing hour: 09:30-10:30 (avg $-275.00). Last 10 trades: 40.0% win rate (below baseline). Current streak: 1W.",
   "recommendations": [
     "Consistently losing in 09:30-10:30 (11 trades, $-3,024.95). Consider reducing size or avoiding this window.",
-    "Consistently losing in 11:30-12:30 (2 trades, $-5,773.77). Consider reducing size or avoiding this window.",
-    "Best day: Monday ($+1278.09 avg). Lean into this session.",
+    "Best day: Monday ($+1731.08 avg). Lean into this session.",
     "Worst day: Wednesday ($-1729.53 avg). Consider sitting out or reducing size."
   ]
 }
