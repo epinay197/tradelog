@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-11 09:52 ET",
+  "generated_at": "2026-04-13 04:21 ET",
   "trade_count": 41,
   "overall": {
     "trades": 41,
@@ -1141,91 +1141,5 @@
   "recommendations": [
     "Best day: Monday ($+1731.08 avg). Lean into this session.",
     "Worst day: Wednesday ($-1729.53 avg). Consider sitting out or reducing size."
-  ],
-  "weekly_review": {
-    "week_number": 15,
-    "date_range": "2026-04-06 to 2026-04-10",
-    "current_week": {
-      "trades": 4,
-      "winners": 4,
-      "losers": 0,
-      "breakeven": 0,
-      "win_rate": 100.0,
-      "total_pnl": 16483.0,
-      "avg_pnl": 4120.75,
-      "avg_win": 4120.75,
-      "avg_loss": 0,
-      "largest_win": 8352.0,
-      "largest_loss": 938.0,
-      "expectancy": 4120.75,
-      "profit_factor": 999.99
-    },
-    "prior_week": {
-      "trades": 0,
-      "winners": 0,
-      "losers": 0,
-      "breakeven": 0,
-      "win_rate": 0,
-      "total_pnl": 0,
-      "avg_pnl": 0,
-      "avg_win": 0,
-      "avg_loss": 0,
-      "largest_win": 0,
-      "largest_loss": 0,
-      "expectancy": 0,
-      "profit_factor": 0
-    },
-    "four_week_avg": {
-      "trades": 4,
-      "winners": 4,
-      "losers": 0,
-      "breakeven": 0,
-      "win_rate": 100.0,
-      "total_pnl": 16483.0,
-      "avg_pnl": 4120.75,
-      "avg_win": 4120.75,
-      "avg_loss": 0,
-      "largest_win": 8352.0,
-      "largest_loss": 938.0,
-      "expectancy": 4120.75,
-      "profit_factor": 999.99
-    },
-    "daily_breakdown": [
-      {
-        "trades": 1,
-        "winners": 1,
-        "losers": 0,
-        "breakeven": 0,
-        "win_rate": 100.0,
-        "total_pnl": 5808.0,
-        "avg_pnl": 5808.0,
-        "avg_win": 5808.0,
-        "avg_loss": 0,
-        "largest_win": 5808.0,
-        "largest_loss": 5808.0,
-        "expectancy": 5808.0,
-        "profit_factor": 999.99,
-        "date": "2026-04-06",
-        "day": "Monday"
-      },
-      {
-        "trades": 3,
-        "winners": 3,
-        "losers": 0,
-        "breakeven": 0,
-        "win_rate": 100.0,
-        "total_pnl": 10675.0,
-        "avg_pnl": 3558.33,
-        "avg_win": 3558.33,
-        "avg_loss": 0,
-        "largest_win": 8352.0,
-        "largest_loss": 938.0,
-        "expectancy": 3558.33,
-        "profit_factor": 999.99,
-        "date": "2026-04-07",
-        "day": "Tuesday"
-      }
-    ],
-    "delta_vs_prior": null
-  }
+  ]
 }
