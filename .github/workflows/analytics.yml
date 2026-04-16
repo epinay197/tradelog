@@ -1,12 +1,9 @@
 name: TradeLog Analytics
 
 on:
-  schedule:
-    # Hourly, Mon-Fri — GitHub cron is UTC; Python-side gate enforces 04:15-16:15 ET
-    - cron: '15 8-21 * * 1-5'
-    # Saturday weekly digest at 9:00 AM ET (~13:00-14:00 UTC depending on DST)
-    - cron: '0 13 * * 6'
-  workflow_dispatch:  # Manual trigger from GitHub UI
+  # DISABLED: All triggers removed per user request to stop TradeLog emails
+  # Previously ran: hourly Mon-Fri, weekly on Saturday, plus manual dispatch
+  workflow_dispatch: []
 
 jobs:
   analytics:
